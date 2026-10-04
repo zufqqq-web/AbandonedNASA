@@ -1,11 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Radio, Send, RotateCcw, Clock, Satellite, Zap, Info } from 'lucide-react';
+import { Radio, Send, RotateCcw, Clock, Satellite, Zap, Info, CheckCircle2 } from 'lucide-react';
 import { spaceAudio } from '../utils/audio';
 import { useT } from '../i18n/LanguageContext';
 import { LocalizedText } from '../i18n/types';
 
 // Speed of light constant: c = 299,792 km/s
 const SPEED_OF_LIGHT_KM_S = 299792;
+
+// Fixed animation durations in milliseconds (4s outward + 0.8s Mars pause + 4s return)
+const OUTBOUND_DURATION_MS = 4000;
+const MARS_PAUSE_DURATION_MS = 800;
+const INBOUND_DURATION_MS = 4000;
+const TOTAL_SIM_DURATION_MS = OUTBOUND_DURATION_MS + MARS_PAUSE_DURATION_MS + INBOUND_DURATION_MS;
 
 interface CommandPreset {
   id: string;
@@ -54,7 +60,11 @@ export const SignalDelaySection: React.FC = () => {
   const [selectedCommand, setSelectedCommand] = useState<CommandPreset>(commandPresets[0]);
   const [isTransmitting, setIsTransmitting] = useState<boolean>(false);
   const [transmissionPhase, setTransmissionPhase] = useState<'idle' | 'earth_to_mars' | 'mars_processing' | 'mars_to_earth' | 'completed'>('idle');
-  const [simulationProgress, setSimulationProgress] = useState<number>(0);
+
+  // Single source of truth for beam coordinate along the track: 0 (Earth) -> 1 (Mars)
+  const [beamProgress, setBeamProgress] = useState<number>(0);
+  // Overall simulation progress: 0..1 (0% to 100%)
+  const [overallProgress, setOverallProgress] = useState<number>(0);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(false);
 
   const animFrameRef = useRef<number | null>(null);
@@ -70,12 +80,18 @@ export const SignalDelaySection: React.FC = () => {
     }
   }, []);
 
+  // Cleanup animation frame on unmount
+  useEffect(() => {
+    return () => {
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current);
+      }
+    };
+  }, []);
+
   // Exact formulas based on physics:
-  // Distance in kilometers
   const distanceKm = distanceMlnKm * 1_000_000;
-  // One-way delay in seconds = distance / c
   const oneWaySeconds = distanceKm / SPEED_OF_LIGHT_KM_S;
-  // Round-trip delay (two-way travel time)
   const roundTripSeconds = oneWaySeconds * 2;
 
   // Format seconds into minutes and seconds
@@ -84,6 +100,9 @@ export const SignalDelaySection: React.FC = () => {
     const secs = (totalSec % 60).toFixed(1);
     return `${mins} ${t.signalDelay.minutes} ${secs} ${t.signalDelay.seconds}`;
   };
+
+  // Remaining simulated real-time during fast-forward playback
+  const remainingRealSeconds = Math.max(0, roundTripSeconds * (1 - overallProgress));
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDistanceMlnKm(Number(e.target.value));
@@ -99,34 +118,46 @@ export const SignalDelaySection: React.FC = () => {
 
     spaceAudio.playTelemetryBeep(1400, 0.08);
     setIsTransmitting(true);
-    setSimulationProgress(0);
+    setBeamProgress(0);
+    setOverallProgress(0);
 
     if (prefersReducedMotion) {
       // Instant execution without animation loops
       setTransmissionPhase('completed');
       setIsTransmitting(false);
+      setOverallProgress(1);
+      setBeamProgress(0);
       spaceAudio.playTelemetryBeep(980, 0.06);
       return;
     }
 
     setTransmissionPhase('earth_to_mars');
     const startTime = performance.now();
-    const totalSimDuration = 4800; // ms
 
     const step = (now: number) => {
       const elapsed = now - startTime;
-      const progress = Math.min(1, elapsed / totalSimDuration);
-      setSimulationProgress(progress);
+      const totalProg = Math.min(1, elapsed / TOTAL_SIM_DURATION_MS);
+      setOverallProgress(totalProg);
 
-      if (progress < 0.45) {
+      if (elapsed < OUTBOUND_DURATION_MS) {
+        // Phase 1: Earth -> Mars (0 -> 1)
+        const p = elapsed / OUTBOUND_DURATION_MS;
+        setBeamProgress(Math.max(0, Math.min(1, p)));
         setTransmissionPhase('earth_to_mars');
-      } else if (progress >= 0.45 && progress < 0.55) {
-        if (transmissionPhase !== 'mars_processing') {
-          setTransmissionPhase('mars_processing');
-        }
-      } else if (progress >= 0.55 && progress < 1.0) {
+      } else if (elapsed < OUTBOUND_DURATION_MS + MARS_PAUSE_DURATION_MS) {
+        // Phase 2: Mars processing pause & flash
+        setBeamProgress(1);
+        setTransmissionPhase('mars_processing');
+      } else if (elapsed < TOTAL_SIM_DURATION_MS) {
+        // Phase 3: Mars -> Earth (1 -> 0)
+        const returnElapsed = elapsed - (OUTBOUND_DURATION_MS + MARS_PAUSE_DURATION_MS);
+        const p = returnElapsed / INBOUND_DURATION_MS;
+        setBeamProgress(Math.max(0, Math.min(1, 1 - p)));
         setTransmissionPhase('mars_to_earth');
       } else {
+        // Phase 4: Completed
+        setBeamProgress(0);
+        setOverallProgress(1);
         setTransmissionPhase('completed');
         setIsTransmitting(false);
         spaceAudio.playTelemetryBeep(1200, 0.06);
@@ -145,23 +176,13 @@ export const SignalDelaySection: React.FC = () => {
     }
     setIsTransmitting(false);
     setTransmissionPhase('idle');
-    setSimulationProgress(0);
+    setBeamProgress(0);
+    setOverallProgress(0);
     spaceAudio.playTelemetryBeep(900, 0.04);
   };
 
-  // Photon packet position in %
-  const getPacketPosition = () => {
-    if (transmissionPhase === 'earth_to_mars') {
-      return (simulationProgress / 0.45) * 100;
-    }
-    if (transmissionPhase === 'mars_processing') {
-      return 100;
-    }
-    if (transmissionPhase === 'mars_to_earth') {
-      return 100 - ((simulationProgress - 0.55) / 0.45) * 100;
-    }
-    return 0;
-  };
+  // Clamped beam position strictly between 0 and 1
+  const clampedProgress = Math.max(0, Math.min(1, beamProgress));
 
   return (
     <section id="signal-delay" className="relative py-24 bg-[#03060a] border-t border-slate-900 overflow-hidden">
@@ -381,67 +402,125 @@ export const SignalDelaySection: React.FC = () => {
         </div>
 
         {/* Animated Planetary Beam Stage */}
-        <div className="rounded-2xl border border-slate-800 bg-[#04060a] p-6 sm:p-10 shadow-2xl relative overflow-hidden">
-          <div className="flex items-center justify-between text-xs font-mono text-slate-500 border-b border-slate-900 pb-3 mb-8">
-            <span>{t.signalDelay.vizTitle}</span>
-            <span className="text-cyan-400 font-mono-tabular">
-              {isTransmitting ? `${t.signalDelay.modeSim}: ${Math.round(simulationProgress * 100)}%` : t.signalDelay.modeIdle}
-            </span>
+        <div className="rounded-2xl border border-slate-800 bg-[#04060a] p-5 sm:p-8 lg:p-10 shadow-2xl relative overflow-hidden">
+          {/* Stage Header with Single Source Progress & Rewind Countdown */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono text-slate-500 border-b border-slate-900 pb-3 mb-6">
+            <span className="uppercase tracking-wider">{t.signalDelay.vizTitle}</span>
+            <div className="flex items-center gap-3">
+              {isTransmitting && (
+                <span className="text-amber-400/90 font-mono-tabular flex items-center gap-1 text-[11px]">
+                  <span>⏩</span>
+                  <span>{formatTime(remainingRealSeconds)}</span>
+                </span>
+              )}
+              <span className="text-cyan-400 font-mono-tabular font-bold">
+                {isTransmitting
+                  ? `${t.signalDelay.modeSim}: ${Math.round(overallProgress * 100)}%`
+                  : transmissionPhase === 'completed'
+                  ? `${t.signalDelay.statusCompleted}`
+                  : t.signalDelay.modeIdle}
+              </span>
+            </div>
           </div>
 
-          {/* Visual Track */}
-          <div className="relative py-8 px-4 sm:px-12 flex items-center justify-between">
-            {/* Transmission Line */}
-            <div className="absolute left-14 sm:left-24 right-14 sm:right-24 h-1 bg-slate-800 rounded-full overflow-hidden">
-              {/* Active signal beam */}
-              {isTransmitting && (
-                <div
-                  className="h-full bg-gradient-to-r from-cyan-500 via-amber-400 to-cyan-500 transition-all duration-75"
-                  style={{ width: `${getPacketPosition()}%` }}
-                />
-              )}
-            </div>
-
-            {/* Moving Photon Packet Dot */}
-            {!prefersReducedMotion && isTransmitting && (
-              <div
-                className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-cyan-400 shadow-[0_0_15px_#22d3ee] pointer-events-none transition-all duration-75 z-20"
-                style={{
-                  left: `calc(56px + ${getPacketPosition() * 0.01} * (100% - 112px))`,
-                }}
-              />
-            )}
-
+          {/* Visual Track: Horizontal on all screens including mobile 375px */}
+          <div className="relative py-4 px-1 sm:px-4 flex items-center justify-between w-full">
             {/* Earth Station Node */}
-            <div className="relative z-10 flex flex-col items-center">
-              <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 flex items-center justify-center transition-all ${
-                transmissionPhase === 'earth_to_mars' || transmissionPhase === 'completed'
-                  ? 'border-cyan-400 bg-cyan-950/60 shadow-[0_0_20px_rgba(34,211,238,0.3)]'
-                  : 'border-slate-700 bg-slate-900'
-              }`}>
-                <span className="text-xl sm:text-2xl">🌍</span>
+            <div className="relative z-10 flex flex-col items-center shrink-0 w-16 sm:w-24 text-center">
+              <div
+                className={`w-11 h-11 sm:w-16 sm:h-16 rounded-full border-2 flex items-center justify-center transition-all ${
+                  transmissionPhase === 'earth_to_mars'
+                    ? 'border-cyan-400 bg-cyan-950/60 shadow-[0_0_20px_rgba(34,211,238,0.4)]'
+                    : transmissionPhase === 'completed'
+                    ? 'border-emerald-400 bg-emerald-950/60 shadow-[0_0_25px_rgba(52,211,153,0.5)]'
+                    : 'border-slate-700 bg-slate-900'
+                }`}
+              >
+                <span className="text-lg sm:text-2xl select-none">🌍</span>
               </div>
-              <span className="mt-2 text-xs font-mono font-bold text-white uppercase">{t.signalDelay.earthNode}</span>
-              <span className="text-[10px] font-mono text-slate-500">{t.signalDelay.earthSub}</span>
+              <span className="mt-2 text-[10px] sm:text-xs font-mono font-bold text-white uppercase tracking-wider truncate max-w-[85px] sm:max-w-none">
+                {t.signalDelay.earthNode}
+              </span>
+              <span className="hidden sm:block text-[10px] font-mono text-slate-500">
+                {t.signalDelay.earthSub}
+              </span>
             </div>
 
-            {/* Space Void / Distance Marker */}
-            <div className="text-center font-mono text-xs text-slate-500 hidden sm:block">
-              <div className="text-slate-400 font-bold">{distanceMlnKm} mln km {t.signalDelay.spaceVacuum}</div>
-              <div className="text-[10px] text-slate-600">{t.signalDelay.lightSpeedConstant}</div>
+            {/* Beam Track Container: flex-1 relative strictly between Earth and Mars centers */}
+            <div className="flex-1 relative mx-2 sm:mx-6 flex flex-col items-center justify-center">
+              {/* Distance Label: Above the line on solid dark background */}
+              <div className="mb-3 sm:mb-5 px-2.5 py-1 bg-[#090d16] border border-slate-800 rounded-md text-[9px] sm:text-xs font-mono text-center shadow-lg z-10 whitespace-nowrap">
+                <span className="text-cyan-400 font-bold">{distanceMlnKm} mln km</span>{' '}
+                <span className="text-slate-400 hidden xs:inline">{t.signalDelay.spaceVacuum}</span>
+              </div>
+
+              {/* Physical Line Track: The photon and fill are clamped 0..1 inside this container */}
+              <div className="relative w-full h-1.5 sm:h-2 bg-slate-800/90 rounded-full">
+                {/* Active Beam Fill */}
+                {isTransmitting && (
+                  <div
+                    className={`absolute top-0 bottom-0 rounded-full transition-none ${
+                      transmissionPhase === 'earth_to_mars'
+                        ? 'left-0 bg-gradient-to-r from-cyan-500 to-blue-500 shadow-[0_0_10px_#06b6d4]'
+                        : transmissionPhase === 'mars_processing'
+                        ? 'left-0 right-0 bg-gradient-to-r from-cyan-500 via-amber-400 to-cyan-500 shadow-[0_0_12px_#f59e0b]'
+                        : 'right-0 bg-gradient-to-l from-amber-500 to-red-500 shadow-[0_0_10px_#f59e0b]'
+                    }`}
+                    style={{
+                      left: transmissionPhase === 'mars_to_earth' ? `${clampedProgress * 100}%` : '0%',
+                      width:
+                        transmissionPhase === 'earth_to_mars'
+                          ? `${clampedProgress * 100}%`
+                          : transmissionPhase === 'mars_processing'
+                          ? '100%'
+                          : `${(1 - clampedProgress) * 100}%`,
+                    }}
+                  />
+                )}
+
+                {/* Moving Photon Packet Circle: Strictly clamped 0..1 with translate(-50%, -50%) */}
+                {!prefersReducedMotion && isTransmitting && (
+                  <div
+                    className={`absolute top-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full pointer-events-none z-20 ${
+                      transmissionPhase === 'earth_to_mars'
+                        ? 'bg-cyan-400 shadow-[0_0_14px_#22d3ee]'
+                        : transmissionPhase === 'mars_processing'
+                        ? 'bg-amber-400 shadow-[0_0_18px_#fbbf24]'
+                        : 'bg-amber-400 shadow-[0_0_14px_#fbbf24]'
+                    }`}
+                    style={{
+                      left: `${clampedProgress * 100}%`,
+                      transform: 'translate(-50%, -50%)',
+                    }}
+                  />
+                )}
+              </div>
+
+              {/* Speed of Light Label: Below the line on solid dark background */}
+              <div className="mt-3 sm:mt-5 px-2.5 py-0.5 bg-[#090d16] border border-slate-900 rounded-md text-[8px] sm:text-[10px] font-mono text-slate-500 text-center shadow-lg z-10 whitespace-nowrap">
+                {t.signalDelay.lightSpeedConstant}
+              </div>
             </div>
 
             {/* Mars Station Node */}
-            <div className="relative z-10 flex flex-col items-center">
-              <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 flex items-center justify-center transition-all ${
-                transmissionPhase === 'mars_processing' || transmissionPhase === 'mars_to_earth'
-                  ? 'border-amber-500 bg-amber-950/60 shadow-[0_0_20px_rgba(245,158,11,0.3)]'
-                  : 'border-slate-700 bg-slate-900'
-              }`}>
-                <span className="text-xl sm:text-2xl">🔴</span>
+            <div className="relative z-10 flex flex-col items-center shrink-0 w-16 sm:w-24 text-center">
+              <div
+                className={`w-11 h-11 sm:w-16 sm:h-16 rounded-full border-2 flex items-center justify-center transition-all ${
+                  transmissionPhase === 'mars_processing'
+                    ? 'border-amber-400 bg-amber-500/30 shadow-[0_0_25px_rgba(245,158,11,0.6)] animate-pulse'
+                    : transmissionPhase === 'mars_to_earth'
+                    ? 'border-amber-500 bg-amber-950/60 shadow-[0_0_20px_rgba(245,158,11,0.4)]'
+                    : 'border-slate-700 bg-slate-900'
+                }`}
+              >
+                <span className="text-lg sm:text-2xl select-none">🔴</span>
               </div>
-              <span className="mt-2 text-xs font-mono font-bold text-amber-400 uppercase">{t.signalDelay.marsNode}</span>
-              <span className="text-[10px] font-mono text-slate-500">{t.signalDelay.marsSub}</span>
+              <span className="mt-2 text-[10px] sm:text-xs font-mono font-bold text-amber-400 uppercase tracking-wider truncate max-w-[85px] sm:max-w-none">
+                {t.signalDelay.marsNode}
+              </span>
+              <span className="hidden sm:block text-[10px] font-mono text-slate-500">
+                {t.signalDelay.marsSub}
+              </span>
             </div>
           </div>
 

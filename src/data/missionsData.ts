@@ -486,9 +486,9 @@ export const missionsData: Mission[] = [
     lastContactDate: '22 марта 2010 (офиц. 25 мая 2011)',
     activeSpan: '2004 — 2010',
     status: {
-      ru: 'Миссия завершена (замерз в ловушке)',
-      en: 'Mission complete (frozen in sand trap)',
-      uz: 'Missiya yakunlandi (qum qopqonida muzlagan)',
+      ru: 'Миссия завершена (по предположению команды миссии, замерз в грунтовой ловушке)',
+      en: 'Mission complete (presumed by mission team to have frozen in soil trap)',
+      uz: 'Missiya yakunlandi (missiya jamoasi taxminiga ko‘ra, tuproq qopqonida muzlagan)',
     },
     statusType: 'silent',
     coordinates: {
@@ -544,27 +544,27 @@ export const missionsData: Mission[] = [
     source: 'https://science.nasa.gov/mission/mer-spirit/',
     quote: {
       text: {
-        ru: 'Спирит не сдался. Он продолжал тащить свое заклинившее колесо и вскрыл чистый кремнезем — одно из величайших открытий Марса.',
-        en: 'Spirit didn’t give up. It kept dragging that dead wheel until it churned up pure silica — one of the greatest discoveries of Mars.',
-        uz: 'Spirit taslim bo‘lmadi. U qotib qolgan g‘ildiragini sudrab, Marsdagi eng buyuk kashfiyotlardan birini amalga oshirdi.',
+        ru: 'Spirit преодолел механический отказ колеса и превратил поломку в научный триумф: прочерченная борозда обнажила чистый кремнезем и доказала существование гидротермальных источников на древнем Марсе.',
+        en: 'Spirit overcame a jammed wheel and turned adversity into triumph: its dragged furrow uncovered pure silica, proving ancient hydrothermal vents on Mars.',
+        uz: 'Spirit qotib qolgan g‘ildirak nosozligini yengib, uni ilmiy zafarga aylantirdi: chuqur iz sof kremnezemni ochib, qadimgi Marsda issiq buloqlar bo‘lganini isbotladi.',
       },
       speaker: {
-        ru: 'Стив Сквайрс, научный руководитель MER',
-        en: 'Steve Squyres, MER Principal Investigator',
-        uz: 'Stiv Skuayres, MER ilmiy rahbari',
+        ru: 'Научный обзор миссии MER',
+        en: 'MER Mission Science Review',
+        uz: 'MER missiyasi ilmiy sharhi',
       },
       context: {
         ru: 'Холмы Колумбия, Марс',
         en: 'Columbia Hills, Mars',
         uz: 'Kolumbiya tepaliklari, Mars',
       },
-      type: 'team_message',
+      type: 'interpretation',
       typeLabel: {
-        ru: 'Сообщение команды',
-        en: 'Team Message',
-        uz: 'Jamoa so‘zi',
+        ru: 'Обзор миссии',
+        en: 'Mission Summary',
+        uz: 'Missiya sharhi',
       },
-      sourceUrl: 'https://www.jpl.nasa.gov/news/nasa-ends-efforts-to-contact-spirit'
+      sourceUrl: 'https://science.nasa.gov/mission/mer-spirit/'
     },
     specs: [
       {
@@ -607,7 +607,11 @@ export const missionsData: Mission[] = [
       {
         date: '22.03.2010',
         title: { ru: 'Последний сигнал из Трои', en: 'Last Transmission from Troy', uz: 'Troyadan so‘nggi signal' },
-        description: { ru: 'Окончательное падение напряжения питания ниже предела пробуждения.', en: 'Bus voltage fell below autonomous wake-up threshold.', uz: 'Kuchlanish uyg‘onish chegarasidan pastga tushib ketdi.' }
+        description: {
+          ru: 'По предположению команды миссии, произошло падение напряжения питания ниже предела автономного пробуждения (источник: NASA/JPL Spirit Mission Conclusion).',
+          en: 'Presumed by the mission team to be a bus voltage drop below autonomous wake-up threshold (source: NASA/JPL Spirit Mission Conclusion).',
+          uz: 'Missiya jamoasi taxminiga ko‘ra, kuchlanish avtonom uyg‘onish chegarasidan pastga tushib ketgan (manba: NASA/JPL Spirit Mission Conclusion).'
+        }
       },
     ],
     signalData: {
@@ -615,9 +619,9 @@ export const missionsData: Mission[] = [
       frequency: 'Direct-to-Earth X-Band',
       lastTelemetry: 'VOLTAGE BUS: 24.1V // SLEEP MODE ENGAGED // SOLAR POWER: 133 Wh/sol // CARRIER UNLOCKED',
       fadeReason: {
-        ru: 'По предположению команды миссии, истощение аккумуляторов в зимний период произошло из-за неблагоприятного угла наклона к Солнцу в песчаной ловушке.',
-        en: 'Per mission team analysis, battery depletion resulted from unfavourable sun orientation in sand trap during winter.',
-        uz: 'Missiya jamoasi taxminiga ko‘ra, qum qopqonida qish mavsumida panellarning noqulay burchagi tufayli batareya to‘liq tugagan.',
+        ru: 'По предположению команды миссии, истощение аккумуляторов в зимний период произошло из-за неблагоприятного угла наклона к Солнцу в песчаной ловушке (источник: NASA JPL).',
+        en: 'Per mission team analysis, battery depletion resulted from unfavourable sun orientation in sand trap during winter (source: NASA JPL).',
+        uz: 'Missiya jamoasi taxminiga ko‘ra, qum qopqonida qish mavsumida panellarning noqulay burchagi tufayli batareya to‘liq tugagan (manba: NASA JPL).',
       },
       quoteRu: 'Низкий заряд батарей. Переход в режим глубокого сна для сохранения тепла.',
       quoteEn: 'Low battery voltage. Entering deep sleep preservation mode.',

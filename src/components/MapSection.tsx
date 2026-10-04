@@ -189,7 +189,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
   };
 
   return (
-    <section id="map-section" className="relative isolate z-0 py-20 bg-[#05070b] border-t border-slate-900">
+    <section id="map-section" className="relative isolate z-10 py-20 bg-[#05070b] border-t border-slate-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 pb-6 border-b border-slate-800/80 gap-4">
@@ -236,7 +236,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
           {/* Main Leaflet Canvas */}
           <div className="lg:col-span-8 relative rounded-xl border border-slate-800 overflow-hidden bg-slate-950 shadow-2xl">
             {/* Top Toolbar Overlay */}
-            <div className="absolute top-3 left-3 z-[400] flex items-center gap-2 bg-slate-950/85 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-mono text-slate-300">
+            <div className="absolute top-3 left-3 z-20 flex items-center gap-2 bg-slate-950/85 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-mono text-slate-300">
               <Layers className="w-3.5 h-3.5 text-red-400" />
               <span>
                 {activeWorld === 'Mars' ? 'Mars Trek (MOLA)' : 'Moon Trek (LRO WAC)'}
@@ -244,7 +244,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
             </div>
 
             {/* Coordinates / Compass HUD overlay */}
-            <div className="absolute bottom-3 left-3 z-[400] hidden sm:flex items-center gap-2 bg-slate-950/85 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-800 text-[11px] font-mono text-slate-400">
+            <div className="absolute bottom-3 left-3 z-20 hidden sm:flex items-center gap-2 bg-slate-950/85 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-800 text-[11px] font-mono text-slate-400">
               <Navigation className="w-3 h-3 text-red-400" />
               <span>{t.map.clickToView}</span>
             </div>

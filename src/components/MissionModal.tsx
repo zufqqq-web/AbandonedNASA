@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Mission } from '../types/mission';
 import { SchematicView } from './SchematicView';
@@ -23,29 +24,199 @@ import {
 } from 'lucide-react';
 import { spaceAudio } from '../utils/audio';
 import { useT } from '../i18n/LanguageContext';
+import { Language } from '../i18n/types';
 
 interface MissionModalProps {
   mission: Mission | null;
   onClose: () => void;
 }
 
+/**
+ * Format long mission duration strings into a concise format without ellipsis.
+ * e.g., "6 лет 2 месяца 19 дней (2 210 солов...)" -> "6 лет 2 мес."
+ */
+function formatShortDuration(raw: string, lang: Language): string {
+  if (!raw) return '';
+  const mainPart = raw.split('(')[0].trim();
+
+  if (lang === 'ru') {
+    // Match "X лет/года Y месяца/месяцев"
+    const matchYM = mainPart.match(/(\d+\+?\s+(?:лет|года|год))\s+(\d+\s+месяц\w*)/i);
+    if (matchYM) {
+      return `${matchYM[1]} ${matchYM[2].replace(/месяц\w*/i, 'мес.')}`;
+    }
+    // Match "X года Y дней"
+    const matchYD = mainPart.match(/(\d+\+?\s+(?:лет|года|год))\s+(\d+\s+дн\w*)/i);
+    if (matchYD) {
+      return `${matchYD[1]} ${matchYD[2].replace(/дн\w*/i, 'дн.')}`;
+    }
+    // Match "21 час 36 минут..."
+    const matchHM = mainPart.match(/(\d+)\s+час\w*\s+(\d+)\s+минут\w*/i);
+    if (matchHM) {
+      return `${matchHM[1]} ч ${matchHM[2]} мин`;
+    }
+    // Match "3 дня экспедиции"
+    const matchD = mainPart.match(/^(\d+\s+дн\w*)/i);
+    if (matchD) {
+      return matchD[1];
+    }
+    // Match "13+ лет работы"
+    const matchY = mainPart.match(/^(\d+\+?\s+(?:лет|года|год))/i);
+    if (matchY) {
+      return matchY[1];
+    }
+  } else if (lang === 'en') {
+    // "X years Y months" -> "6 yrs 2 mos."
+    const matchYM = mainPart.match(/(\d+\+?\s+years?)\s+(\d+\s+months?)/i);
+    if (matchYM) {
+      const yrs = matchYM[1].replace(/years?/i, 'yrs');
+      const mos = matchYM[2].replace(/months?/i, 'mos.');
+      return `${yrs} ${mos}`;
+    }
+    // "X years Y days"
+    const matchYD = mainPart.match(/(\d+\+?\s+years?)\s+(\d+\s+days?)/i);
+    if (matchYD) {
+      return `${matchYD[1].replace(/years?/i, 'yrs')} ${matchYD[2]}`;
+    }
+    // "21 hours 36 minutes"
+    const matchHM = mainPart.match(/(\d+)\s+hours?\s+(\d+)\s+minutes?/i);
+    if (matchHM) {
+      return `${matchHM[1]}h ${matchHM[2]}m`;
+    }
+    // "3 days"
+    const matchD = mainPart.match(/^(\d+\s+days?)/i);
+    if (matchD) {
+      return matchD[1];
+    }
+    // "13+ years"
+    const matchY = mainPart.match(/^(\d+\+?\s+years?)/i);
+    if (matchY) {
+      return matchY[1];
+    }
+  } else if (lang === 'uz') {
+    // "6 yil 2 oy 19 kun" -> "6 yil 2 oy"
+    const matchYM = mainPart.match(/(\d+\+?\s+yil)\s+(\d+\s+oy)/i);
+    if (matchYM) {
+      return `${matchYM[1]} ${matchYM[2]}`;
+    }
+    // "4 yil 19 kun"
+    const matchYD = mainPart.match(/(\d+\+?\s+yil)\s+(\d+\s+kun)/i);
+    if (matchYD) {
+      return `${matchYD[1]} ${matchYD[2]}`;
+    }
+    // "21 soat 36 daqiqa"
+    const matchHM = mainPart.match(/(\d+)\s+soat\s+(\d+)\s+daqiqa/i);
+    if (matchHM) {
+      return `${matchHM[1]} soat ${matchHM[2]} daq`;
+    }
+    // "3 kunlik ekspeditsiya"
+    const matchD = mainPart.match(/(\d+)\s+kun/i);
+    if (matchD) {
+      return `${matchD[1]} kun`;
+    }
+    // "13+ yildan beri"
+    const matchY = mainPart.match(/(\d+\+?)\s+yildan/i);
+    if (matchY) {
+      return `${matchY[1]} yil`;
+    }
+  }
+
+  return mainPart;
+}
+
 export const MissionModal: React.FC<MissionModalProps> = ({ mission, onClose }) => {
-  const { t, localize } = useT();
+  const { t, localize, language } = useT();
   const [activeTab, setActiveTab] = useState<'overview' | 'edl' | 'science' | 'contact' | 'location' | 'specs'>('overview');
   const [nasaImage, setNasaImage] = useState<NasaImageResult | null>(null);
   const [loadingImage, setLoadingImage] = useState<boolean>(false);
   const [imageError, setImageError] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'photo' | 'schematic'>('photo');
 
+  const modalRef = useRef<HTMLDivElement>(null);
+  const tabsNavRef = useRef<HTMLDivElement>(null);
+  const previousActiveElementRef = useRef<HTMLElement | null>(null);
+
+  // Store previously focused element when modal is triggered
   useEffect(() => {
+    if (mission) {
+      previousActiveElementRef.current = document.activeElement as HTMLElement | null;
+    }
+  }, [mission]);
+
+  // Lock body scroll while modal is open, restore on close
+  useEffect(() => {
+    if (!mission) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [mission]);
+
+  // Escape key handling & focus trap inside modal dialog
+  useEffect(() => {
+    if (!mission) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        e.preventDefault();
         onClose();
+        return;
+      }
+
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+          }
+        }
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+
+    // Initial focus on close button for accessibility
+    const focusTimer = setTimeout(() => {
+      if (modalRef.current) {
+        const closeBtn = modalRef.current.querySelector<HTMLElement>('[data-modal-close]');
+        closeBtn?.focus();
+      }
+    }, 60);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      clearTimeout(focusTimer);
+      // Return focus to previously active element (card button)
+      if (previousActiveElementRef.current && typeof previousActiveElementRef.current.focus === 'function') {
+        previousActiveElementRef.current.focus();
+      }
+    };
+  }, [mission, onClose]);
+
+  // Scroll active tab into view when changed or rendered
+  useEffect(() => {
+    if (!tabsNavRef.current) return;
+    const activeBtn = tabsNavRef.current.querySelector<HTMLElement>('[data-active="true"]');
+    if (activeBtn) {
+      activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     // Reset tab and image state when mission changes
@@ -77,131 +248,161 @@ export const MissionModal: React.FC<MissionModalProps> = ({ mission, onClose }) 
 
   if (!mission) return null;
 
-  return (
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      spaceAudio.playTelemetryBeep(900, 0.04);
+      onClose();
+    }
+  };
+
+  const modalNode = (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 lg:p-10">
+      <div
+        onClick={handleBackdropClick}
+        className="fixed inset-0 z-[200] overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 md:p-6 lg:p-8"
+      >
         <motion.div
-          initial={{ opacity: 0, scale: 0.96, y: 20 }}
+          ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-mission-title"
+          onClick={(e) => e.stopPropagation()}
+          initial={{ opacity: 0, scale: 0.96, y: 16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.96, y: 20 }}
-          transition={{ duration: 0.3, ease: 'easeOut' }}
-          className="relative w-full max-w-5xl bg-[#090d16] border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
+          exit={{ opacity: 0, scale: 0.96, y: 16 }}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
+          className="relative w-full max-w-5xl bg-[#090d16] border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col my-auto"
+          style={{ maxHeight: 'calc(100dvh - 2rem)' }}
         >
-          {/* Top Bar Header with Mission Status */}
-          <div className="sticky top-0 z-20 bg-[#090d16]/95 backdrop-blur-md border-b border-slate-800 px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          {/* Top Bar Header with Fixed Sticky Position and Opaque Background */}
+          <div className="sticky top-0 z-30 bg-[#090d16] border-b border-slate-800 px-4 sm:px-6 py-4 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-3 min-w-0 pr-2">
               <span
-                className={`w-3 h-3 rounded-full ${
+                className={`w-3 h-3 rounded-full shrink-0 ${
                   mission.destination === 'Mars' ? 'bg-red-500' : 'bg-slate-200'
                 }`}
               />
-              <div>
-                <div className="text-[11px] font-mono uppercase tracking-widest text-slate-400">
+              <div className="min-w-0">
+                <div className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-slate-400 truncate">
                   {t.modal.dossierPrefix} {mission.designation}
                 </div>
-                <h2 className="font-display text-2xl sm:text-3xl font-bold text-white uppercase tracking-tight">
+                <h2
+                  id="modal-mission-title"
+                  className="font-display text-xl sm:text-2xl md:text-3xl font-bold text-white uppercase tracking-tight truncate"
+                >
                   {localize(mission.name)} ({mission.englishName})
                 </h2>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 shrink-0">
               <div className="hidden sm:block text-right">
-                <div className="text-[10px] font-mono text-slate-400 uppercase">{t.modal.missionStatusLabel}</div>
-                <div className="text-xs font-mono font-semibold text-amber-400">
+                <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">{t.modal.missionStatusLabel}</div>
+                <div className="text-xs font-mono font-semibold text-amber-400 max-w-[200px] truncate">
                   {localize(mission.status)}
                 </div>
               </div>
 
               <button
+                data-modal-close="true"
                 onClick={() => {
                   spaceAudio.playTelemetryBeep(900, 0.04);
                   onClose();
                 }}
-                className="p-2 text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg transition-colors"
+                className="p-2 text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
                 title={t.modal.closeEsc}
+                aria-label={t.modal.closeEsc}
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
           </div>
 
-          {/* Navigation Sub-Tabs */}
-          <div className="bg-slate-950/70 border-b border-slate-800/80 px-6 py-2 flex items-center gap-2 overflow-x-auto scrollbar-none">
+          {/* Navigation Sub-Tabs: Single line with smooth scroll-snap on narrow screens */}
+          <div
+            ref={tabsNavRef}
+            className="flex flex-nowrap items-center gap-2 overflow-x-auto scroll-smooth snap-x snap-mandatory px-4 sm:px-6 py-2.5 bg-[#070b12] border-b border-slate-800 shrink-0 select-none scrollbar-none"
+          >
             <button
+              data-active={activeTab === 'overview'}
               onClick={() => {
                 setActiveTab('overview');
                 spaceAudio.playTelemetryBeep(1100, 0.03);
               }}
-              className={`px-3 py-1.5 text-xs font-mono rounded-md whitespace-nowrap transition-colors ${
+              className={`snap-start whitespace-nowrap shrink-0 text-xs font-mono px-3.5 py-1.5 rounded-lg transition-colors ${
                 activeTab === 'overview'
-                  ? 'bg-red-600 text-white font-medium'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-red-600 text-white font-semibold shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
               }`}
             >
               {t.modal.tabOverview}
             </button>
             <button
+              data-active={activeTab === 'edl'}
               onClick={() => {
                 setActiveTab('edl');
                 spaceAudio.playTelemetryBeep(1100, 0.03);
               }}
-              className={`px-3 py-1.5 text-xs font-mono rounded-md whitespace-nowrap transition-colors ${
+              className={`snap-start whitespace-nowrap shrink-0 text-xs font-mono px-3.5 py-1.5 rounded-lg transition-colors ${
                 activeTab === 'edl'
-                  ? 'bg-red-600 text-white font-medium'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-red-600 text-white font-semibold shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
               }`}
             >
               {t.modal.tabEdl}
             </button>
             <button
+              data-active={activeTab === 'science'}
               onClick={() => {
                 setActiveTab('science');
                 spaceAudio.playTelemetryBeep(1100, 0.03);
               }}
-              className={`px-3 py-1.5 text-xs font-mono rounded-md whitespace-nowrap transition-colors ${
+              className={`snap-start whitespace-nowrap shrink-0 text-xs font-mono px-3.5 py-1.5 rounded-lg transition-colors ${
                 activeTab === 'science'
-                  ? 'bg-red-600 text-white font-medium'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-red-600 text-white font-semibold shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
               }`}
             >
               {t.modal.tabScience}
             </button>
             <button
+              data-active={activeTab === 'contact'}
               onClick={() => {
                 setActiveTab('contact');
                 spaceAudio.playTelemetryBeep(1100, 0.03);
               }}
-              className={`px-3 py-1.5 text-xs font-mono rounded-md whitespace-nowrap transition-colors ${
+              className={`snap-start whitespace-nowrap shrink-0 text-xs font-mono px-3.5 py-1.5 rounded-lg transition-colors ${
                 activeTab === 'contact'
-                  ? 'bg-red-600 text-white font-medium'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-red-600 text-white font-semibold shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
               }`}
             >
               {t.modal.tabContact}
             </button>
             <button
+              data-active={activeTab === 'location'}
               onClick={() => {
                 setActiveTab('location');
                 spaceAudio.playTelemetryBeep(1100, 0.03);
               }}
-              className={`px-3 py-1.5 text-xs font-mono rounded-md whitespace-nowrap transition-colors ${
+              className={`snap-start whitespace-nowrap shrink-0 text-xs font-mono px-3.5 py-1.5 rounded-lg transition-colors ${
                 activeTab === 'location'
-                  ? 'bg-red-600 text-white font-medium'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-red-600 text-white font-semibold shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
               }`}
             >
               {t.modal.tabLocation}
             </button>
             <button
+              data-active={activeTab === 'specs'}
               onClick={() => {
                 setActiveTab('specs');
                 spaceAudio.playTelemetryBeep(1100, 0.03);
               }}
-              className={`px-3 py-1.5 text-xs font-mono rounded-md whitespace-nowrap transition-colors ${
+              className={`snap-start whitespace-nowrap shrink-0 text-xs font-mono px-3.5 py-1.5 rounded-lg transition-colors ${
                 activeTab === 'specs'
-                  ? 'bg-red-600 text-white font-medium'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-red-600 text-white font-semibold shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
               }`}
             >
               {t.modal.tabSpecs}
@@ -209,7 +410,7 @@ export const MissionModal: React.FC<MissionModalProps> = ({ mission, onClose }) 
           </div>
 
           {/* Modal Scrollable Body */}
-          <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-8">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 min-h-0">
             {/* TAB: OVERVIEW */}
             {activeTab === 'overview' && (
               <div className="space-y-6">
@@ -218,10 +419,10 @@ export const MissionModal: React.FC<MissionModalProps> = ({ mission, onClose }) 
                   <SchematicView
                     type={mission.schematicType}
                     accentColor={mission.destination === 'Mars' ? '#e11d48' : '#38bdf8'}
-                    className="h-64 sm:h-72 w-full"
+                    className="h-60 sm:h-72 w-full"
                   />
-                  <div className="absolute bottom-3 right-3 text-right">
-                    <div className="text-[10px] font-mono text-slate-400 uppercase">{t.modal.locationRef}</div>
+                  <div className="absolute bottom-3 right-3 text-right bg-slate-950/80 backdrop-blur-sm px-2.5 py-1 rounded-md border border-slate-800">
+                    <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">{t.modal.locationRef}</div>
                     <div className="text-xs font-mono text-slate-200">{localize(mission.locationName)}</div>
                   </div>
                 </div>
@@ -249,29 +450,29 @@ export const MissionModal: React.FC<MissionModalProps> = ({ mission, onClose }) 
                   </div>
                 )}
 
-                {/* Fast Facts Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-lg">
-                    <div className="text-[10px] font-mono text-slate-400 uppercase">{t.modal.launchDateLabel}</div>
-                    <div className="text-xs sm:text-sm font-mono font-semibold text-white mt-0.5">
+                {/* Fast Facts Grid with auto-fit minmax(180px, 1fr) & no truncation */}
+                <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
+                  <div className="p-3.5 bg-slate-900/80 border border-slate-800 rounded-xl flex flex-col justify-between">
+                    <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">{t.modal.launchDateLabel}</div>
+                    <div className="text-xs sm:text-sm font-mono font-semibold text-white mt-1 break-words leading-snug">
                       {mission.launchDate}
                     </div>
                   </div>
-                  <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-lg">
-                    <div className="text-[10px] font-mono text-slate-400 uppercase">{t.modal.landingDateLabel}</div>
-                    <div className="text-xs sm:text-sm font-mono font-semibold text-white mt-0.5">
+                  <div className="p-3.5 bg-slate-900/80 border border-slate-800 rounded-xl flex flex-col justify-between">
+                    <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">{t.modal.landingDateLabel}</div>
+                    <div className="text-xs sm:text-sm font-mono font-semibold text-white mt-1 break-words leading-snug">
                       {mission.landingDate}
                     </div>
                   </div>
-                  <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-lg">
-                    <div className="text-[10px] font-mono text-slate-400 uppercase">{t.modal.lifespanLabel}</div>
-                    <div className="text-xs sm:text-sm font-mono font-semibold text-white mt-0.5 truncate">
-                      {localize(mission.missionDuration)}
+                  <div className="p-3.5 bg-slate-900/80 border border-slate-800 rounded-xl flex flex-col justify-between">
+                    <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">{t.modal.lifespanLabel}</div>
+                    <div className="text-xs sm:text-sm font-mono font-semibold text-white mt-1 break-words leading-snug">
+                      {formatShortDuration(localize(mission.missionDuration), language)}
                     </div>
                   </div>
-                  <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-lg">
-                    <div className="text-[10px] font-mono text-slate-400 uppercase">{t.modal.distance}</div>
-                    <div className="text-xs sm:text-sm font-mono font-semibold text-red-400 mt-0.5">
+                  <div className="p-3.5 bg-slate-900/80 border border-slate-800 rounded-xl flex flex-col justify-between">
+                    <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">{t.modal.distance}</div>
+                    <div className="text-xs sm:text-sm font-mono font-semibold text-red-400 mt-1 break-words leading-snug">
                       {mission.distanceTraveled ? localize(mission.distanceTraveled) : t.modal.stationaryValue}
                     </div>
                   </div>
@@ -285,13 +486,13 @@ export const MissionModal: React.FC<MissionModalProps> = ({ mission, onClose }) 
                   </h4>
                   <div className="space-y-3">
                     {mission.milestones.map((m, idx) => (
-                      <div key={idx} className="flex gap-4 p-3 bg-slate-900/40 border border-slate-800/80 rounded-lg">
+                      <div key={idx} className="flex gap-4 p-3.5 bg-slate-900/40 border border-slate-800/80 rounded-lg">
                         <div className="text-xs font-mono font-bold text-red-400 whitespace-nowrap min-w-[80px]">
                           {m.date}
                         </div>
                         <div>
                           <div className="text-xs sm:text-sm font-bold text-white">{localize(m.title)}</div>
-                          <div className="text-xs text-slate-300 mt-0.5">{localize(m.description)}</div>
+                          <div className="text-xs text-slate-300 mt-0.5 leading-relaxed">{localize(m.description)}</div>
                         </div>
                       </div>
                     ))}
@@ -367,13 +568,13 @@ export const MissionModal: React.FC<MissionModalProps> = ({ mission, onClose }) 
 
                   {mission.signalData && (
                     <div className="mt-6 p-4 bg-slate-950 border border-red-900/40 rounded-lg font-mono text-xs text-slate-300 space-y-2">
-                      <div className="text-[11px] text-red-400 font-bold uppercase">
+                      <div className="text-[11px] text-red-400 font-bold uppercase tracking-wider">
                         {t.modal.finalPacketHeading}
                       </div>
-                      <div className="text-slate-400">
+                      <div className="text-slate-400 break-words leading-relaxed">
                         {mission.signalData.lastTelemetry}
                       </div>
-                      <div className="text-slate-400 pt-1 border-t border-slate-800">
+                      <div className="text-slate-400 pt-2 border-t border-slate-800 leading-relaxed">
                         {t.modal.fadeReasonPrefix} <span className="text-slate-200">{localize(mission.signalData.fadeReason)}</span>
                       </div>
                     </div>
@@ -523,7 +724,7 @@ export const MissionModal: React.FC<MissionModalProps> = ({ mission, onClose }) 
 
                 {/* Coordinates Info Box */}
                 <div className="p-4 bg-slate-950 border border-slate-800 rounded-lg font-mono text-xs space-y-2">
-                  <div className="text-slate-400 uppercase">{t.modal.locationRef}:</div>
+                  <div className="text-slate-400 uppercase tracking-wider">{t.modal.locationRef}:</div>
                   <div className="text-base text-white font-bold">{mission.coordinates.formatted}</div>
                   <div className="text-slate-400">{mission.coordinates.lat}, {mission.coordinates.lon}</div>
                 </div>
@@ -555,8 +756,8 @@ export const MissionModal: React.FC<MissionModalProps> = ({ mission, onClose }) 
                 <div className="border border-slate-800 rounded-lg overflow-hidden divide-y divide-slate-800">
                   {mission.specs.map((s, idx) => (
                     <div key={idx} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-950/60">
-                      <span className="text-xs font-mono uppercase text-slate-400">{localize(s.label)}</span>
-                      <span className="text-xs sm:text-sm font-mono text-slate-100 font-semibold sm:text-right">{localize(s.value)}</span>
+                      <span className="text-xs font-mono uppercase tracking-wider text-slate-400">{localize(s.label)}</span>
+                      <span className="text-xs sm:text-sm font-mono text-slate-100 font-semibold sm:text-right break-words">{localize(s.value)}</span>
                     </div>
                   ))}
                 </div>
@@ -565,8 +766,8 @@ export const MissionModal: React.FC<MissionModalProps> = ({ mission, onClose }) 
           </div>
 
           {/* Modal Footer */}
-          <div className="bg-[#090d16] border-t border-slate-800 px-6 py-4 flex items-center justify-between text-xs font-mono text-slate-500">
-            <div>
+          <div className="bg-[#090d16] border-t border-slate-800 px-4 sm:px-6 py-3.5 flex items-center justify-between text-xs font-mono text-slate-500 shrink-0">
+            <div className="truncate pr-2">
               {t.modal.missionPrefix} {mission.designation}
             </div>
             <button
@@ -574,7 +775,7 @@ export const MissionModal: React.FC<MissionModalProps> = ({ mission, onClose }) 
                 spaceAudio.playTelemetryBeep(900, 0.04);
                 onClose();
               }}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded transition-colors"
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition-colors shrink-0 font-medium"
             >
               {t.modal.closeDossierBtn}
             </button>
@@ -583,4 +784,6 @@ export const MissionModal: React.FC<MissionModalProps> = ({ mission, onClose }) 
       </div>
     </AnimatePresence>
   );
+
+  return createPortal(modalNode, document.body);
 };
