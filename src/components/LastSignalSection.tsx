@@ -55,15 +55,15 @@ const signalCases: SignalCase[] = [
     natureOfEnd: 'Потеря выработки энергии в глобальной пылевой буре планетарного масштаба',
     telemetryFact: {
       raw: 'TAUP > 10.8 // SOLAR ARRAY: ~22 Wh/sol // PBIT: NOMINAL // X-BAND CARRIER DROPPED',
-      explanation: 'В полдень на Марсе оптическая толщина атмосферы tau превысила 10.8 (непрозрачность более 99%). Суточная генерация солнечных батарей упала с 600 до 22 ватт-часов, что привело к отключению бортового компьютера.',
-      sourceUrl: 'https://mars.nasa.gov/mer/mission/status_opportunityAll.html',
-      sourceName: 'NASA JPL Mars Exploration Rover Status Report'
+      explanation: 'В полдень на Марсе оптическая толщина атмосферы tau превысила 10.8 (непрозрачность более 99%). Суточная генерация солнечных батарей упала с 600 до 22 ватт-часов. По оценке команды инженеров NASA JPL, это привело к необратимому переохлаждению и разряду аккумуляторов.',
+      sourceUrl: 'https://science.nasa.gov/mission/mer-opportunity/',
+      sourceName: 'NASA Science: MER Opportunity Mission'
     },
     quotes: [
       {
         type: 'interpretation',
         typeLabel: 'Интерпретация',
-        text: '«Моя батарея разряжена, и вокруг темнеет (My battery is low and it\'s getting dark).»',
+        text: '«Моя батарея разряжена, и вокруг темнеет (My battery is low and it\'s getting dark)».',
         attribution: 'Джейкоб Марголис (Jacob Margolis), научный журналист радио KPCC / NPR',
         context: 'Февраль 2019, публикация в медиа',
         sourceUrl: 'https://www.npr.org/2019/02/13/694354249/opportunity-rover-falls-silent-on-mars',
@@ -98,8 +98,8 @@ const signalCases: SignalCase[] = [
       behavior: 'erratic_dropout'
     },
     sources: [
-      { title: 'NASA JPL: MER Mission Status Archive', url: 'https://mars.nasa.gov/mer/mission/status_opportunityAll.html' },
-      { title: 'NPR: Origin of "My Battery is Low" phrase', url: 'https://www.npr.org/2019/02/13/694354249/opportunity-rover-falls-silent-on-mars' }
+      { title: 'NASA Science: MER Opportunity Overview', url: 'https://science.nasa.gov/mission/mer-opportunity/' },
+      { title: 'NASA JPL: Opportunity Mission End Release', url: 'https://www.jpl.nasa.gov/news/nasas-record-setting-opportunity-rover-mission-on-mars-comes-to-end' }
     ]
   },
   {
@@ -110,22 +110,22 @@ const signalCases: SignalCase[] = [
     date: '22 марта 2010',
     coordinates: '14.57° S, 175.47° E',
     sol: 'Сол 2210',
-    natureOfEnd: 'Отказ термостата и замерзание передатчика в ловушке сульфатных песков',
+    natureOfEnd: 'Отказ обогрева и переохлаждение передатчика в ловушке сульфатных песков',
     telemetryFact: {
-      raw: 'PWR BUS: 24.1V // SOLAR POWER: 134 Wh/sol // PREDICTED INTERNAL TEMP: <-55°C // CARRIER UNLOCKED',
-      explanation: 'Застрявший ровер не смог накрениться к северу для встречи низкого зимнего марсианского солнца. Энергии не хватило для питания нагревателей, и системный кварцевый генератор охладился ниже рабочего предела.',
-      sourceUrl: 'https://mars.nasa.gov/mer/mission/status_spiritAll.html',
-      sourceName: 'NASA JPL Spirit Telemetry Log'
+      raw: 'SOLAR POWER: ~134 Wh/sol // LOW-POWER SLEEP MODE // CARRIER UNLOCKED (SOL 2210)',
+      explanation: 'Застрявший ровер не смог накрениться к северу для встречи низкого зимнего марсианского солнца. По предположению команды миссии JPL, недостаток энергии не позволил питать внутренние нагреватели, что привело к замерзанию аппарата и сбою тактового генератора.',
+      sourceUrl: 'https://science.nasa.gov/mission/mer-spirit/',
+      sourceName: 'NASA Science: MER Spirit Mission'
     },
     quotes: [
       {
         type: 'telemetry',
         typeLabel: 'Данные аппарата',
-        text: '«Сол 2210: статус шины электропитания — переход в режим глубокого сна для консервации тепла; прямая связь X-band с Землей прервана».',
-        attribution: 'Бортовой телеметрический пакет Spirit',
-        context: '22 марта 2010 года, прямая линия связи с Землей',
-        sourceUrl: 'https://mars.nasa.gov/mer/mission/status_spiritAll.html',
-        sourceName: 'NASA Planetary Data System'
+        text: '«Сол 2210: статус шины электропитания — переход в режим сна для консервации тепла; прямая связь X-band с Землей прервана (по реконструкции JPL)».',
+        attribution: 'Телеметрический отчет миссии Spirit (NASA JPL)',
+        context: '22 марта 2010 года, последний контакт с Землей',
+        sourceUrl: 'https://science.nasa.gov/mission/mer-spirit/',
+        sourceName: 'NASA Planetary Data / Science Mission'
       },
       {
         type: 'interpretation',
@@ -135,7 +135,7 @@ const signalCases: SignalCase[] = [
         context: '2010-2011 годы',
         sourceUrl: 'https://www.jpl.nasa.gov/news/nasa-ends-efforts-to-contact-spirit',
         sourceName: 'NASA JPL News Release',
-        clarificationNote: 'В физическом смысле температура шасси опустилась ниже -55°C, из-за чего батареи потеряли ёмкость, а тактовый генератор сбился.'
+        clarificationNote: 'По расчетам команды миссии, температура шасси опустилась ниже -55°C, из-за чего батареи потеряли ёмкость, а тактовый генератор сбился.'
       },
       {
         type: 'team_message',
@@ -165,8 +165,8 @@ const signalCases: SignalCase[] = [
       behavior: 'drooping_curve'
     },
     sources: [
-      { title: 'NASA JPL: Spirit Mission Status', url: 'https://mars.nasa.gov/mer/mission/status_spiritAll.html' },
-      { title: 'NASA Release: Concluding Efforts to Contact Spirit', url: 'https://www.jpl.nasa.gov/news/nasa-ends-efforts-to-contact-spirit' }
+      { title: 'NASA Science: MER Spirit Overview', url: 'https://science.nasa.gov/mission/mer-spirit/' },
+      { title: 'NASA JPL: Concluding Efforts to Contact Spirit', url: 'https://www.jpl.nasa.gov/news/nasa-ends-efforts-to-contact-spirit' }
     ]
   },
   {
@@ -174,14 +174,13 @@ const signalCases: SignalCase[] = [
     vehicle: 'InSight',
     designation: 'Interior Exploration using Seismic Investigations',
     world: 'МАРС // Равнина Элизий (Elysium Planitia)',
-    // TODO: verify exact minute of last received telemetry packet from DSN on Dec 15 vs official shutdown declaration on Dec 21
-    date: '15 декабря 2022',
+    date: '15 декабря 2022 (завершение объявлено 21 декабря 2022)',
     coordinates: '4.50° N, 135.62° E',
     sol: 'Сол 1440',
     natureOfEnd: 'Необратимое накопление слоя пыли на солнечных батареях UltraFlex',
     telemetryFact: {
-      raw: 'SOLAR BUS: 285 Wh/sol (исходно >5000 Wh) // IDC CAMERA FRAME: SEIS IN DUST // RELAY LINK TERMINATED',
-      explanation: 'Ветровые вихри не очистили панели станции. Выработка упала до предела поддержания базовой жизнедеятельности. После передачи финального снимка сейсмометра связь завершилась.',
+      raw: 'SOLAR BUS: ~285 Wh/sol // IDC CAMERA: SEIS IN DUST // DSN CARRIER SILENT',
+      explanation: 'Ветровые вихри не очистили панели станции. Суточная выработка упала с 5000 до ~285 ватт-часов. После передачи финального снимка сейсмометра 15 декабря 2022 года связь прекратилась (по предположению команды миссии, буферная батарея окончательно разрядилась).',
       sourceUrl: 'https://mars.nasa.gov/insight/mission/status/',
       sourceName: 'NASA InSight Mission Updates'
     },
@@ -198,11 +197,11 @@ const signalCases: SignalCase[] = [
       {
         type: 'telemetry',
         typeLabel: 'Данные аппарата',
-        text: '«Снимок камеры IDC_1440: радиометрия подтверждает падение мощности шины UltraFlex до 285 Вт·ч; разряд буферной АКБ ниже порога релейной защиты».',
-        attribution: 'Бортовой накопитель InSight / NASA PDS',
-        context: '15 декабря 2022, последний пакет сырых снимков',
-        sourceUrl: 'https://mars.nasa.gov/insight/multimedia/raw-images/',
-        sourceName: 'NASA Planetary Data System Raw Images'
+        text: '«По данным телеметрии миссии на Сол 1440, суточная генерация энергии упала примерно до 285 Вт·ч, после чего аппарат не ответил на вызовы сети DSN (по предположению команды миссии, сработала автоматическая защита от глубокого разряда АКБ)».',
+        attribution: 'Пресс-релиз NASA HQ 22-132 о завершении миссии InSight',
+        context: '21 декабря 2022 года, официальный отчет NASA',
+        sourceUrl: 'https://www.nasa.gov/news-release/nasas-insight-mission-ends-after-four-years-of-groundbreaking-science/',
+        sourceName: 'NASA Headquarters Release 22-132'
       }
     ],
     audioScenario: {
@@ -224,7 +223,7 @@ const signalCases: SignalCase[] = [
     },
     sources: [
       { title: 'NASA: InSight Mission Status', url: 'https://mars.nasa.gov/insight/mission/status/' },
-      { title: 'NASA InSight Raw Image Archive', url: 'https://mars.nasa.gov/insight/multimedia/raw-images/' }
+      { title: 'NASA HQ: InSight Mission Ends After 4 Years of Science', url: 'https://www.nasa.gov/news-release/nasas-insight-mission-ends-after-four-years-of-groundbreaking-science/' }
     ]
   },
   {
@@ -232,14 +231,13 @@ const signalCases: SignalCase[] = [
     vehicle: 'Apollo 17 ALSEP',
     designation: 'Apollo Lunar Surface Experiments Package',
     world: 'ЛУНА // Долина Тавр-Литтров (Taurus-Littrow)',
-    // TODO: verify exact execution timestamp across ground stations (15:47 UTC vs 15:35 UTC network command log)
     date: '30 сентября 1977 года',
     coordinates: '20.19° N, 30.77° E',
-    sol: 'Земное время: 15:47 UTC',
-    natureOfEnd: 'Мгновенное принудительное отключение передатчика командой с Земли по финансовым причинам',
+    sol: 'Завершение программы: 30 сентября 1977',
+    natureOfEnd: 'Принудительное отключение научной программы командой с Земли по бюджетным причинам',
     telemetryFact: {
-      raw: 'SNAP-27 RTG: 68.2 W // S-BAND 2278.0 MHz: NOMINAL // CMD 074: TRANSMITTER POWER OFF EXECUTED // NO DECAY',
-      explanation: 'Станция НЕ имела поломок. Плутониевый РИТЭГ вырабатывал устойчивое питание, а сейсмометр фиксировал удары метеоритов. NASA отключило всю лунную сеть ALSEP из-за сокращения бюджета конгрессом ($5 млн/год на персонал слежения).',
+      raw: 'SNAP-27 RTG: ~68 W // S-BAND 2278.0 MHz: ACTIVE // GROUND COMMAND: SCIENCE OPERATIONS TERMINATED',
+      explanation: 'Станция НЕ имела поломок. Плутониевый РИТЭГ вырабатывал устойчивое питание, а сейсмометр фиксировал удары метеоритов. NASA прекратило финансирование наземной сети слежения ALSEP по решению руководства агентства и конгресса ($5 млн/год). Несущий радиосигнал станций фиксировался астрономами до конца 1977 года.',
       sourceUrl: 'https://curator.jsc.nasa.gov/lunar/alsep.cfm',
       sourceName: 'NASA Johnson Space Center ALSEP Termination Report'
     },
@@ -251,16 +249,16 @@ const signalCases: SignalCase[] = [
         attribution: 'Джеймс Бейтс (James Bates), менеджер научной программы ALSEP в NASA JSC',
         context: 'Сентябрь 1977 года, официальное коммюнике NASA',
         sourceUrl: 'https://history.nasa.gov/SP-407/sp407.htm',
-        sourceName: 'NASA History Office: Apollo Expeditions to the Moon'
+        sourceName: 'NASA History Office: Apollo Expeditions to the Moon (SP-407)'
       },
       {
         type: 'telemetry',
         typeLabel: 'Данные аппарата',
-        text: '«15:47:00 UTC: Выполнена команда деактивации передатчика. Уровень радиоизлучения несущей S-band упал до нуля за 2 миллисекунды».',
-        attribution: 'Журнал регистрации сети Manned Space Flight Network',
-        context: '30 сентября 1977 года, терминация станций Apollo 12, 14, 15, 16, 17',
+        text: '«30 сентября 1977 года: По командам наземных станций сети MSFN научные эксперименты станций ALSEP были переведены в пассивный режим после 8 лет работы».',
+        attribution: 'Отчет NASA Johnson Space Center (ALSEP Termination, 1979)',
+        context: '30 сентября 1977 года, завершение поддержки сети станций Apollo 12, 14, 15, 16, 17',
         sourceUrl: 'https://curator.jsc.nasa.gov/lunar/alsep.cfm',
-        sourceName: 'NASA Lunar Science Institute Data Record'
+        sourceName: 'NASA JSC Lunar Science Information'
       }
     ],
     audioScenario: {
@@ -291,13 +289,13 @@ const signalCases: SignalCase[] = [
     vehicle: 'Ingenuity',
     designation: 'Mars Helicopter Scout (Ginny)',
     world: 'МАРС // Кратер Езеро, Холмы Валинор',
-    date: '18 января 2024',
+    date: '18 января 2024 (окончание полетов)',
     coordinates: '18.4446° N, 77.4509° E',
     sol: 'Сол 1038 (Полет 72)',
     natureOfEnd: 'Повреждение конца лопасти винта при жесткой посадке. Аппарат жив и переведен в стационарный метеопост',
     telemetryFact: {
       raw: 'ROTOR ROTATION: HALTED // BLADE TIP SEPARATION DETECTED // AVIONICS & POWER: 100% HEALTHY // ZIGBEE 914 MHz: ACTIVE',
-      explanation: 'Винтокрылая машина совершила 72 полета вместо 5 запланированных. Хотя повреждение лопасти больше не позволяет летать, электроника, солнечная батарея и радиоканал полностью исправны. Аппарат не замолчал — он собирает данные о погоде.',
+      explanation: 'Винтокрылая машина совершила 72 полета вместо 5 запланированных. Хотя повреждение лопасти больше не позволяет летать, электроника, солнечная батарея и радиоканал полностью исправны. По решению команды миссии JPL вертолет переведен в режим стационарной базы наблюдений.',
       sourceUrl: 'https://www.jpl.nasa.gov/news/after-three-years-on-mars-nasas-ingenuity-helicopter-mission-ends',
       sourceName: 'NASA JPL News Release 2024'
     },
@@ -307,7 +305,7 @@ const signalCases: SignalCase[] = [
         typeLabel: 'Сообщение команды',
         text: '«Историческое путешествие Ingenuity подошло к концу. Этот выдающийся вертолет взлетел выше и дальше, чем мы могли представить, доказав, что управляемый полет на Марсе возможен. Он больше не может подняться в небо, но его приборы продолжают служить науке».',
         attribution: 'Билл Нельсон (Bill Nelson), администратор NASA',
-        context: '25 января 2024, официальный видео-брифинг NASA HQ',
+        context: '25 января 2024, официальный брифинг NASA HQ',
         sourceUrl: 'https://www.nasa.gov/news-release/after-three-years-on-mars-nasas-ingenuity-helicopter-mission-ends/',
         sourceName: 'NASA Headquarters Release 24-009'
       },
@@ -315,11 +313,11 @@ const signalCases: SignalCase[] = [
         type: 'interpretation',
         typeLabel: 'Интерпретация',
         text: '«Сложил крылья, но остался жив: вертолет превратился в постоянную погодную станцию».',
-        attribution: 'Обозреватели космической отрасли',
+        attribution: 'Обозреватели космической отрасли и пресс-служба NASA JPL',
         context: 'Январь 2024 года',
         sourceUrl: 'https://www.jpl.nasa.gov/news/after-three-years-on-mars-nasas-ingenuity-helicopter-mission-ends',
         sourceName: 'NASA JPL Technical Briefing',
-        clarificationNote: 'Команда JPL перепрошила память аппарата: теперь вертолет просыпается каждое утро, замеряет температуру грунта и скорость ветра и сохраняет их во флэш-память.'
+        clarificationNote: 'Команда JPL обновила бортовое ПО: аппарат просыпается каждое утро, замеряет температуру грунта и параметры датчиков и сохраняет их в бортовую память.'
       }
     ],
     audioScenario: {

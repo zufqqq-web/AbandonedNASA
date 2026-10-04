@@ -27,8 +27,8 @@ const moonArtifacts: MoonArtifact[] = [
     category: 'Биологический след',
     description: 'Чтобы взлетная ступень лунного модуля смогла оторваться от Луны и выйти на орбиту, астронавты сбрасывали на грунт всё лишнее оборудование: ранцы жизнеобеспечения PLSS, камеры и белые мешки с бытовым мусором и физиологическими отходами.',
     scientificOrCulturalValue: 'Сегодня для астробиологов NASA это уникальный естественный эксперимент: выжили ли споры земных бактерий после 50+ лет нахождения в абсолютном вакууме при жестком солнечном ультрафиолете и перепадах температур от -173°C до +120°C?',
-    sourceName: 'NASA Astrobiology / Lunar Microbes Study',
-    sourceUrl: 'https://astrobiology.nasa.gov/news/what-microbes-did-apollo-leave-behind/',
+    sourceName: 'NASA Apollo Lunar Surface Journal / Apollo 11 Jettison Log',
+    sourceUrl: 'https://history.nasa.gov/alsj/a11/a11.jettison.html',
     iconTag: 'BIO-BAG'
   },
   {
@@ -39,9 +39,9 @@ const moonArtifacts: MoonArtifact[] = [
     year: 'Февраль 1971',
     category: 'Спорт & Эксперимент',
     description: 'Командир Алан Шепард тайно провез на Луну головку от клюшки для гольфа Wilson Staff 6-iron, насадил её на рукоятку лунного совка для проб грунта и одной рукой в жестком скафандре нанес удары по двум мячам.',
-    scientificOrCulturalValue: 'Шепард воскликнул: «Мяч летит мили и мили и мили!». В 2021 году британский специалист Энди Сондерс по сверхчетким снимкам орбитального зонда LRO установил точные места падения: первый мяч пролетел 22 метра, второй — около 37 метров.',
-    sourceName: 'USGA Museum / NASA Apollo 14 Journal',
-    sourceUrl: 'https://www.usga.org/content/usga/home-page/articles/2021/02/shepard-moon-shot-apollo-14-50th-anniversary.html',
+    scientificOrCulturalValue: 'Шепард воскликнул: «Мяч летит мили и мили и мили!». Позднее, по расчетам независимого исследователя Энди Сондерса на основе снимков орбитального зонда NASA LRO, дальность оценена скромнее: первый мяч пролетел около 22 метров (24 ярда), второй — около 37 метров (40 ярдов).',
+    sourceName: 'NASA Apollo Lunar Surface Journal (Apollo 14 EVA-2)',
+    sourceUrl: 'https://history.nasa.gov/alsj/a14/a14.eva2.html',
     iconTag: 'GOLF'
   },
   {
@@ -53,8 +53,8 @@ const moonArtifacts: MoonArtifact[] = [
     category: 'Искусство & Память',
     description: 'Единственный официальный художественный арт-объект на Луне. Бельгийский скульптор Пол Ван Хейдонк создал анонимную фигурку человека без расовых и половых признаков. Дэвид Скотт аккуратно уложил ее в лунную пыль рядом с памятной пластиной.',
     scientificOrCulturalValue: 'На табличке выбиты имена 14 погибших советских и американских исследователей космоса: Юрий Гагарин, Владимир Комаров, Павел Беляев, Георгий Добровольский, Виктор Пацаев, Владислав Волков, Вирджил Гриссом, Эдвард Уайт, Роджер Чаффи и другие.',
-    sourceName: 'Smithsonian National Air and Space Museum',
-    sourceUrl: 'https://airandspace.si.edu/collection-objects/statue-fallen-astronaut/nasm_A19860010000',
+    sourceName: 'NASA Apollo 15 Journal (ALSJ) & Smithsonian NASM',
+    sourceUrl: 'https://history.nasa.gov/alsj/a15/a15.eva3.html',
     iconTag: 'ART'
   },
   {
@@ -65,9 +65,9 @@ const moonArtifacts: MoonArtifact[] = [
     year: 'Апрель 1972',
     category: 'Личный артефакт',
     description: 'Пилот лунного модуля Чарли Дюк оставил на реголите цветное фото своей семьи: самого себя, супруги Дороти и двух сыновей, Чарльза и Томаса. На обороте снимка дети написали: «This is the family of Astronaut Charlie Duke from Planet Earth who landed on the Moon, April 20, 1972».',
-    scientificOrCulturalValue: 'Дюк сфотографировал снимок на лунной поверхности камерой Hasselblad (кадр AS16-117-18841). Сегодня фотография почти наверняка выцвела от жесткого нефильтрованного солнечного ультрафиолета, но сам физический слой пленки покоится на Луне.',
-    sourceName: 'NASA Apollo Lunar Surface Journal (AS16-117-18841)',
-    sourceUrl: 'https://www.hq.nasa.gov/alsj/a16/a16.step.html',
+    scientificOrCulturalValue: 'Дюк сфотографировал снимок на лунной поверхности камерой Hasselblad (кадр AS16-117-18841). По оценке специалистов, органические красители фотографии выцвели под жестким солнечным УФ-излучением, но сама физическая подложка сохраняется на Луне.',
+    sourceName: 'NASA Apollo Lunar Surface Journal (Apollo 16 Plum Crater)',
+    sourceUrl: 'https://history.nasa.gov/alsj/a16/a16.step.html',
     iconTag: 'PHOTO'
   }
 ];

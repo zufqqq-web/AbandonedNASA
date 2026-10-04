@@ -7,8 +7,10 @@ import { MapSection } from './components/MapSection';
 import { MissionTimeline } from './components/MissionTimeline';
 import { ObjectExplorer } from './components/ObjectExplorer';
 import { LastSignalSection } from './components/LastSignalSection';
+import { SignalDelaySection } from './components/SignalDelaySection';
 import { MoonArtifactsSection } from './components/MoonArtifactsSection';
 import { TheyRemainGallery } from './components/TheyRemainGallery';
+import { QuizSection } from './components/QuizSection';
 import { FinalSection } from './components/FinalSection';
 import { Footer } from './components/Footer';
 import { MissionModal } from './components/MissionModal';
@@ -69,13 +71,19 @@ export default function App() {
         {/* 6. Emotional Centerpiece: The Last Signal */}
         <LastSignalSection />
 
-        {/* 7. Special Section: What Remains on the Moon */}
+        {/* 7. Deep Space Network: Radio Signal Delay Simulator */}
+        <SignalDelaySection />
+
+        {/* 8. Special Section: What Remains on the Moon */}
         <MoonArtifactsSection />
 
-        {/* 8. Planetary Heritage Memorial: They Remain */}
+        {/* 9. Planetary Heritage Memorial: They Remain */}
         <TheyRemainGallery />
 
-        {/* 9. Conclusion */}
+        {/* 10. Interactive Knowledge Quiz */}
+        <QuizSection />
+
+        {/* 11. Conclusion */}
         <FinalSection />
       </main>
 
