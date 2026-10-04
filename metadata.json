@@ -1,0 +1,6 @@
+{
+  "name": "Abandoned but not Forgotten | NASA Space Archive",
+  "description": "Интерактивный цифровой музей космических аппаратов NASA, оставшихся на Луне и Марсе — «Брошенная, но не забытая» для NASA Space Apps Challenge.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
