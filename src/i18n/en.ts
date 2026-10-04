@@ -319,5 +319,11 @@ export const en: Dictionary = {
     landingPointLabel: 'Landing Site',
     landingDateTimeLabel: 'Touchdown Timestamp',
     officialTelemetryLabel: 'Official NASA JPL Telemetry',
+    orbitalGalleryTitle: 'VIEW FROM ORBIT',
+    orbitalGallerySubtitle: 'Landing site and hardware captures from NASA orbiters (LROC / HiRISE)',
+    orbitalNasaId: 'NASA ID:',
+    orbitalOriginalLink: 'NASA Archive Original',
+    orbitalEmptyFallback: 'Direct high-resolution orbital observations for this site are cataloged in NASA Planetary Data System (PDS) / HiRISE / LROC science repositories.',
+    orbitalPdsLink: 'Open NASA PDS Archive',
   },
 };

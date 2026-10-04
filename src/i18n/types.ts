@@ -325,6 +325,12 @@ export interface Dictionary {
     landingPointLabel: string;
     landingDateTimeLabel: string;
     officialTelemetryLabel: string;
+    orbitalGalleryTitle: string;
+    orbitalGallerySubtitle: string;
+    orbitalNasaId: string;
+    orbitalOriginalLink: string;
+    orbitalEmptyFallback: string;
+    orbitalPdsLink: string;
   };
 }
 

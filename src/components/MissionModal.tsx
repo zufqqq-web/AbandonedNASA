@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Mission } from '../types/mission';
 import { SchematicView } from './SchematicView';
-import { fetchNasaImageForMission, NasaImageResult } from '../utils/nasaImages';
+import { fetchNasaImageForMission, fetchOrbitalImagesForMission, NasaImageResult } from '../utils/nasaImages';
 import {
   X,
   MapPin,
@@ -20,7 +20,8 @@ import {
   Image as ImageIcon,
   Cpu,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Layers
 } from 'lucide-react';
 import { spaceAudio } from '../utils/audio';
 import { useT } from '../i18n/LanguageContext';
@@ -131,6 +132,8 @@ export const MissionModal: React.FC<MissionModalProps> = ({ mission, onClose }) 
   const [loadingImage, setLoadingImage] = useState<boolean>(false);
   const [imageError, setImageError] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'photo' | 'schematic'>('photo');
+  const [orbitalImages, setOrbitalImages] = useState<NasaImageResult[]>([]);
+  const [loadingOrbital, setLoadingOrbital] = useState<boolean>(false);
 
   const modalRef = useRef<HTMLDivElement>(null);
   const tabsNavRef = useRef<HTMLDivElement>(null);
@@ -224,6 +227,7 @@ export const MissionModal: React.FC<MissionModalProps> = ({ mission, onClose }) 
     setViewMode('photo');
     setNasaImage(null);
     setImageError(false);
+    setOrbitalImages([]);
 
     if (mission) {
       setLoadingImage(true);
@@ -242,6 +246,31 @@ export const MissionModal: React.FC<MissionModalProps> = ({ mission, onClose }) 
         })
         .finally(() => {
           setLoadingImage(false);
+        });
+
+      // Fetch orbital imagery (LROC / HiRISE)
+      setLoadingOrbital(true);
+      const orbitalQuery = mission.orbitalSearchQuery || (
+        mission.destination === 'Moon'
+          ? `LROC ${mission.englishName} landing site`
+          : `HiRISE ${mission.englishName}`
+      );
+      // Keywords for relevance filtering
+      const baseKeywords = (mission.orbitalSearchQuery || mission.englishName)
+        .toLowerCase()
+        .replace(/[(),]/g, '')
+        .split(/\s+/)
+        .filter((w) => w.length > 2 && !['landing', 'site', 'mars', 'moon', 'crater'].includes(w));
+
+      fetchOrbitalImagesForMission(orbitalQuery, baseKeywords)
+        .then((results) => {
+          setOrbitalImages(results);
+        })
+        .catch(() => {
+          setOrbitalImages([]);
+        })
+        .finally(() => {
+          setLoadingOrbital(false);
         });
     }
   }, [mission]);
@@ -727,6 +756,99 @@ export const MissionModal: React.FC<MissionModalProps> = ({ mission, onClose }) 
                   <div className="text-slate-400 uppercase tracking-wider">{t.modal.locationRef}:</div>
                   <div className="text-base text-white font-bold">{mission.coordinates.formatted}</div>
                   <div className="text-slate-400">{mission.coordinates.lat}, {mission.coordinates.lon}</div>
+                </div>
+
+                {/* Orbital Imagery Gallery ("Вид с орбиты") */}
+                <div className="rounded-xl border border-slate-800 bg-slate-950 p-5 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-900 pb-3">
+                    <div>
+                      <div className="text-xs font-mono text-cyan-400 uppercase tracking-wider flex items-center gap-2">
+                        <Layers className="w-3.5 h-3.5" />
+                        <span>{t.modal.orbitalGalleryTitle}</span>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        {t.modal.orbitalGallerySubtitle}
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-mono text-cyan-500/80 bg-cyan-950/30 px-2 py-1 rounded border border-cyan-900/40 self-start sm:self-auto">
+                      NASA IMAGE API // ORBITAL
+                    </span>
+                  </div>
+
+                  {loadingOrbital ? (
+                    <div className="h-44 flex flex-col items-center justify-center gap-3 text-slate-400 text-xs font-mono bg-slate-950/70 border border-dashed border-slate-800 rounded-lg">
+                      <Loader2 className="w-5 h-5 animate-spin text-cyan-400" />
+                      <span>{t.modal.photoLoading}</span>
+                    </div>
+                  ) : orbitalImages.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {orbitalImages.map((img) => (
+                        <div
+                          key={img.nasaId}
+                          className="group rounded-lg border border-slate-800/90 bg-slate-900/60 overflow-hidden flex flex-col hover:border-slate-700 transition-colors"
+                        >
+                          <div className="relative aspect-video bg-black overflow-hidden shrink-0">
+                            <img
+                              src={img.imageUrl}
+                              alt={img.title}
+                              referrerPolicy="no-referrer"
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                              loading="lazy"
+                            />
+                            <div className="absolute top-2 left-2 text-[10px] font-mono px-2 py-0.5 rounded bg-black/80 text-cyan-300 border border-slate-800 backdrop-blur-sm truncate max-w-[200px]">
+                              {t.modal.orbitalNasaId} {img.nasaId}
+                            </div>
+                            <div className="absolute bottom-2 right-2 text-[10px] font-mono px-2 py-0.5 rounded bg-black/80 text-slate-300 border border-slate-800 backdrop-blur-sm">
+                              {img.dateCreated}
+                            </div>
+                          </div>
+                          <div className="p-3.5 flex-1 flex flex-col justify-between gap-2.5">
+                            <div>
+                              <h4 className="text-xs font-bold text-slate-200 line-clamp-1 group-hover:text-cyan-300 transition-colors">
+                                {img.title}
+                              </h4>
+                              <p className="text-[11px] text-slate-400 line-clamp-2 mt-1 leading-relaxed">
+                                {img.description}
+                              </p>
+                            </div>
+                            <div className="pt-2 border-t border-slate-800/70 flex items-center justify-between text-[11px] font-mono">
+                              <span className="text-slate-500 truncate">{img.center || 'NASA'}</span>
+                              <a
+                                href={img.detailUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-cyan-400 hover:text-cyan-300 inline-flex items-center gap-1 font-medium transition-colors shrink-0"
+                              >
+                                <span>{t.modal.orbitalOriginalLink}</span>
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    /* Fallback when no orbital imagery found */
+                    <div className="p-4 bg-slate-900/40 border border-dashed border-slate-800 rounded-lg text-xs font-mono space-y-3">
+                      <div className="flex items-start gap-2.5 text-slate-300">
+                        <AlertCircle className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                        <span className="leading-relaxed">
+                          {t.modal.orbitalEmptyFallback}
+                        </span>
+                      </div>
+                      <div className="pt-2 border-t border-slate-800/60 flex items-center justify-end">
+                        <a
+                          href="https://pds.nasa.gov/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-cyan-400 hover:text-cyan-300 inline-flex items-center gap-1.5 transition-colors font-medium text-[11px]"
+                        >
+                          <span>{t.modal.orbitalPdsLink}</span>
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Official Mission Source Link */}

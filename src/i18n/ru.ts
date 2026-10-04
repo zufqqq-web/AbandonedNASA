@@ -319,5 +319,11 @@ export const ru: Dictionary = {
     landingPointLabel: 'Точка посадки',
     landingDateTimeLabel: 'Дата и время касания',
     officialTelemetryLabel: 'Официальная телеметрия NASA JPL',
+    orbitalGalleryTitle: 'ВИД С ОРБИТЫ',
+    orbitalGallerySubtitle: 'Снимки мест посадки с орбитальных аппаратов NASA (LROC / HiRISE)',
+    orbitalNasaId: 'NASA ID:',
+    orbitalOriginalLink: 'Оригинал в архиве NASA',
+    orbitalEmptyFallback: 'Прямые орбитальные снимки этого сектора индексируются в научном каталоге NASA Planetary Data System (PDS) / HiRISE / LROC.',
+    orbitalPdsLink: 'Открыть каталог NASA PDS',
   },
 };

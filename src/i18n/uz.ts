@@ -319,5 +319,11 @@ export const uz: Dictionary = {
     landingPointLabel: 'Qo‘nish nuqtasi',
     landingDateTimeLabel: 'Qo‘nish sanasi va vaqti',
     officialTelemetryLabel: 'NASA JPL rasmiy telemetriyasi',
+    orbitalGalleryTitle: 'ORBITADAN KO‘RINISH',
+    orbitalGallerySubtitle: 'NASA orbital apparatlari (LROC / HiRISE) orqali olingan qo‘nish joyi suratlari',
+    orbitalNasaId: 'NASA ID:',
+    orbitalOriginalLink: 'NASA arxivida asl nusxa',
+    orbitalEmptyFallback: 'Ushbu sektor uchun to‘g‘ridan-to‘g‘ri yuqori aniqlikdagi suratlar NASA Planetary Data System (PDS) / HiRISE / LROC ilmiy kataloglarida saqlanadi.',
+    orbitalPdsLink: 'NASA PDS katalogini ochish',
   },
 };

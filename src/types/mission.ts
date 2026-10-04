@@ -74,6 +74,7 @@ export interface Mission {
     formatted: string;
   };
   nasaSearchQuery?: string;
+  orbitalSearchQuery?: string;
   locationName: string | LocalizedText;
   missionDuration: string | LocalizedText;
   distanceTraveled?: string | LocalizedText;
