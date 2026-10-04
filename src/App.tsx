@@ -8,6 +8,7 @@ import { MissionTimeline } from './components/MissionTimeline';
 import { ObjectExplorer } from './components/ObjectExplorer';
 import { LastSignalSection } from './components/LastSignalSection';
 import { SignalDelaySection } from './components/SignalDelaySection';
+import { SignalGame } from './components/SignalGame';
 import { MoonArtifactsSection } from './components/MoonArtifactsSection';
 import { TheyRemainGallery } from './components/TheyRemainGallery';
 import { QuizSection } from './components/QuizSection';
@@ -74,7 +75,10 @@ export default function App() {
         {/* 7. Deep Space Network: Radio Signal Delay Simulator */}
         <SignalDelaySection />
 
-        {/* 8. Special Section: What Remains on the Moon */}
+        {/* 8. Educational Simulation: Signal Recovery Game */}
+        <SignalGame />
+
+        {/* 9. Special Section: What Remains on the Moon */}
         <MoonArtifactsSection />
 
         {/* 9. Planetary Heritage Memorial: They Remain */}
