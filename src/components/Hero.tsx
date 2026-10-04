@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { ArrowDown, Radio, Database, ShieldCheck } from 'lucide-react';
+import { ArrowDown, Radio } from 'lucide-react';
 import { spaceAudio } from '../utils/audio';
+import { useT } from '../i18n/LanguageContext';
 
 interface HeroProps {
   activeWorld: 'Moon' | 'Mars';
@@ -9,6 +10,8 @@ interface HeroProps {
 }
 
 export const Hero: React.FC<HeroProps> = ({ activeWorld, onExploreClick }) => {
+  const { t } = useT();
+
   return (
     <section className="relative min-h-[92vh] flex items-center justify-center overflow-hidden pt-20 pb-16">
       {/* Background Graphic Field with Radial Gradient & Atmospheric Planetary Glow */}
@@ -52,7 +55,7 @@ export const Hero: React.FC<HeroProps> = ({ activeWorld, onExploreClick }) => {
           <Radio className="w-3.5 h-3.5 text-red-500 animate-pulse" />
           <span>NASA Planetary Science Archive</span>
           <span aria-hidden="true" className="text-slate-600">·</span>
-          <span>Проект «Брошенная, но не забытая»</span>
+          <span>{t.hero.badge}</span>
         </motion.div>
 
         {/* Main Dramatic Headline */}
@@ -63,9 +66,9 @@ export const Hero: React.FC<HeroProps> = ({ activeWorld, onExploreClick }) => {
           className="font-display text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight text-white uppercase leading-[1.05]"
           style={{ textWrap: 'balance' }}
         >
-          ОСТАВЛЕНЫ.<br />
+          {t.hero.titlePart1}<br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-rose-400 to-amber-300">
-            НО НЕ ЗАБЫТЫ.
+            {t.hero.titlePart2}
           </span>
         </motion.h1>
 
@@ -77,18 +80,7 @@ export const Hero: React.FC<HeroProps> = ({ activeWorld, onExploreClick }) => {
           className="mt-6 text-lg sm:text-xl md:text-2xl font-medium text-slate-200 tracking-tight max-w-3xl mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          Истории машин NASA, которые навсегда остались на других мирах.
-        </motion.p>
-
-        {/* Descriptive Manifesto Quote */}
-        <motion.p
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
-          className="mt-4 text-sm sm:text-base text-slate-400 max-w-2xl mx-auto font-light leading-relaxed"
-          style={{ textWrap: 'balance' }}
-        >
-          Они больше никогда не вернутся домой. Но данные, открытия и истории стойкости, которые они оставили после себя в безмолвии кратеров, продолжают двигать цивилизацию вперед.
+          {t.hero.subtitle}
         </motion.p>
 
         {/* Key Quick Metrics Bar */}
@@ -96,22 +88,23 @@ export const Hero: React.FC<HeroProps> = ({ activeWorld, onExploreClick }) => {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="mt-10 grid grid-cols-3 max-w-xl mx-auto border-y border-slate-800/80 py-3 text-left divide-x divide-slate-800"
+          className="mt-10 grid grid-cols-2 sm:grid-cols-4 max-w-2xl mx-auto border-y border-slate-800/80 py-3 text-left divide-y sm:divide-y-0 sm:divide-x divide-slate-800 gap-3 sm:gap-0"
         >
-          <div className="px-4">
-            <div className="text-[11px] font-mono text-slate-400 uppercase">Осталось на Луне</div>
-            <div className="text-xl sm:text-2xl font-bold font-mono-tabular text-slate-100">6+ ступеней</div>
-            <div className="text-[10px] text-slate-400">Apollo & Surveyor</div>
+          <div className="px-3">
+            <div className="text-xl sm:text-2xl font-bold font-mono-tabular text-slate-100">10+</div>
+            <div className="text-[11px] font-mono text-slate-400">{t.hero.statsMissions}</div>
           </div>
-          <div className="px-4">
-            <div className="text-[11px] font-mono text-slate-400 uppercase">Осталось на Марсе</div>
-            <div className="text-xl sm:text-2xl font-bold font-mono-tabular text-red-400">8+ аппаратов</div>
-            <div className="text-[10px] text-slate-400">Роверы & Станции</div>
+          <div className="px-3 pt-2 sm:pt-0">
+            <div className="text-xl sm:text-2xl font-bold font-mono-tabular text-slate-100">55+</div>
+            <div className="text-[11px] font-mono text-slate-400">{t.hero.statsTimeSpan}</div>
           </div>
-          <div className="px-4">
-            <div className="text-[11px] font-mono text-slate-400 uppercase">Статус защиты</div>
-            <div className="text-xl sm:text-2xl font-bold font-mono-tabular text-emerald-400">Памятники</div>
-            <div className="text-[10px] text-slate-400">Космическая археология</div>
+          <div className="px-3 pt-2 sm:pt-0">
+            <div className="text-xl sm:text-2xl font-bold font-mono-tabular text-red-400">120+</div>
+            <div className="text-[11px] font-mono text-slate-400">{t.hero.statsDistance}</div>
+          </div>
+          <div className="px-3 pt-2 sm:pt-0">
+            <div className="text-xl sm:text-2xl font-bold font-mono-tabular text-emerald-400">100%</div>
+            <div className="text-[11px] font-mono text-slate-400">{t.hero.statsHeritage}</div>
           </div>
         </motion.div>
 
@@ -129,24 +122,23 @@ export const Hero: React.FC<HeroProps> = ({ activeWorld, onExploreClick }) => {
             }}
             className="group px-7 py-3.5 bg-red-600 hover:bg-red-700 text-white font-mono text-xs uppercase tracking-widest font-semibold rounded-md transition-all shadow-lg shadow-red-950/40 flex items-center gap-2 hover:gap-3"
           >
-            <span>ИССЛЕДОВАТЬ МИССИИ</span>
+            <span>{t.hero.exploreBtn}</span>
             <ArrowDown className="w-4 h-4 transition-transform group-hover:translate-y-1" />
           </button>
 
           <a
-            href="#last-signal"
+            href="#map-section"
             onClick={() => spaceAudio.playTelemetryBeep(900, 0.04)}
             className="px-6 py-3.5 bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700 font-mono text-xs uppercase tracking-widest rounded-md transition-colors flex items-center gap-2"
           >
-            <Radio className="w-4 h-4 text-rose-500" />
-            <span>Последний сигнал</span>
+            <span>{t.hero.viewMapBtn}</span>
           </a>
         </motion.div>
       </div>
 
       {/* Subtle Bottom Scroll Cue */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-[10px] font-mono text-slate-600">
-        <span className="uppercase tracking-widest">SCROLL TO TRANSMISSION</span>
+        <span className="uppercase tracking-widest">{t.hero.scrollHint}</span>
         <div className="w-0.5 h-6 bg-gradient-to-b from-slate-600 to-transparent animate-pulse" />
       </div>
     </section>

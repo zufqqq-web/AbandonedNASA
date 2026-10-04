@@ -1,3 +1,5 @@
+import { LocalizedText } from '../i18n/types';
+
 export type Destination = 'Moon' | 'Mars';
 
 export type VehicleType = 
@@ -5,29 +7,30 @@ export type VehicleType =
   | 'Посадочный модуль' 
   | 'Лунный автомобиль' 
   | 'Атмосферный вертолет' 
-  | 'Сейсмическая станция';
+  | 'Сейсмическая станция'
+  | LocalizedText;
 
 export type MissionStatusType = 'silent' | 'complete' | 'active';
 
 export interface Milestone {
   date: string;
-  title: string;
-  description: string;
+  title: string | LocalizedText;
+  description: string | LocalizedText;
 }
 
 export interface Specification {
-  label: string;
-  value: string;
+  label: string | LocalizedText;
+  value: string | LocalizedText;
 }
 
 export type QuoteType = 'telemetry' | 'interpretation' | 'team_message';
 
 export interface MissionQuote {
-  text: string;
-  speaker: string;
-  context: string;
+  text: string | LocalizedText;
+  speaker: string | LocalizedText;
+  context: string | LocalizedText;
   type?: QuoteType;
-  typeLabel?: 'Данные аппарата' | 'Интерпретация' | 'Сообщение команды';
+  typeLabel?: string | LocalizedText;
   sourceUrl?: string;
 }
 
@@ -52,7 +55,7 @@ export interface SignalAudioScenario {
 
 export interface Mission {
   id: string;
-  name: string;
+  name: string | LocalizedText;
   englishName: string;
   designation: string;
   destination: Destination;
@@ -61,7 +64,7 @@ export interface Mission {
   landingDate: string;
   lastContactDate?: string;
   activeSpan: string;
-  status: string;
+  status: string | LocalizedText;
   statusType: MissionStatusType;
   coordinates: {
     lat: string;
@@ -71,16 +74,16 @@ export interface Mission {
     formatted: string;
   };
   nasaSearchQuery?: string;
-  locationName: string;
-  missionDuration: string;
-  distanceTraveled?: string;
+  locationName: string | LocalizedText;
+  missionDuration: string | LocalizedText;
+  distanceTraveled?: string | LocalizedText;
   image: string;
   schematicType: 'rover' | 'lander' | 'rover-buggy' | 'helicopter' | 'station';
-  shortDescription: string;
-  howGotThere: string;
-  whatDidItDo: string;
-  lastContactStory: string;
-  whereIsItNow: string;
+  shortDescription: string | LocalizedText;
+  howGotThere: string | LocalizedText;
+  whatDidItDo: string | LocalizedText;
+  lastContactStory: string | LocalizedText;
+  whereIsItNow: string | LocalizedText;
   source?: string;
   quote?: MissionQuote;
   specs: Specification[];
@@ -89,25 +92,26 @@ export interface Mission {
     sol?: number;
     frequency?: string;
     lastTelemetry?: string;
-    fadeReason: string;
+    fadeReason: string | LocalizedText;
     quoteRu: string;
     quoteEn?: string;
+    quoteUz?: string;
     sourceUrl?: string;
   };
 }
 
 export interface WorldInfo {
   id: Destination;
-  name: string;
+  name: string | LocalizedText;
   englishName: string;
-  tagline: string;
-  description: string;
+  tagline: string | LocalizedText;
+  description: string | LocalizedText;
   stats: {
     objectsCount: number;
-    missionsCount: string;
+    missionsCount: string | LocalizedText;
     timeSpan: string;
-    distanceFromEarth: string;
-    environment: string;
-    surfaceTemp: string;
+    distanceFromEarth: string | LocalizedText;
+    environment: string | LocalizedText;
+    surfaceTemp: string | LocalizedText;
   };
 }

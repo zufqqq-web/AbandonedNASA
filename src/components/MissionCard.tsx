@@ -2,8 +2,9 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { Mission } from '../types/mission';
 import { SchematicView } from './SchematicView';
-import { Compass, Clock, MapPin, ArrowUpRight, Activity } from 'lucide-react';
+import { Clock, MapPin, ArrowUpRight, Activity } from 'lucide-react';
 import { spaceAudio } from '../utils/audio';
+import { useT } from '../i18n/LanguageContext';
 
 interface MissionCardProps {
   mission: Mission;
@@ -11,6 +12,8 @@ interface MissionCardProps {
 }
 
 export const MissionCard: React.FC<MissionCardProps> = ({ mission, onOpenDetail }) => {
+  const { t, localize } = useT();
+
   const getStatusColor = (statusType: string) => {
     switch (statusType) {
       case 'active':
@@ -22,6 +25,9 @@ export const MissionCard: React.FC<MissionCardProps> = ({ mission, onOpenDetail 
         return 'text-slate-300 bg-slate-900 border-slate-700/60';
     }
   };
+
+  const destinationLabel = mission.destination === 'Mars' ? t.worldSelector.marsTitle : t.worldSelector.moonTitle;
+  const durationText = localize(mission.missionDuration);
 
   return (
     <motion.div
@@ -42,9 +48,9 @@ export const MissionCard: React.FC<MissionCardProps> = ({ mission, onOpenDetail 
                 mission.destination === 'Mars' ? 'bg-red-500' : 'bg-slate-300'
               }`}
             />
-            <span>{mission.destination === 'Mars' ? 'МАРС' : 'ЛУНА'}</span>
+            <span>{destinationLabel}</span>
             <span aria-hidden="true">·</span>
-            <span>{mission.type}</span>
+            <span>{localize(mission.type)}</span>
           </div>
 
           <div
@@ -58,7 +64,7 @@ export const MissionCard: React.FC<MissionCardProps> = ({ mission, onOpenDetail 
 
         {/* Title */}
         <h3 className="font-display text-xl font-bold text-white uppercase tracking-tight group-hover:text-red-400 transition-colors flex items-center justify-between">
-          <span>{mission.name}</span>
+          <span>{localize(mission.name)}</span>
           <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-red-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all opacity-0 group-hover:opacity-100" />
         </h3>
 
@@ -79,7 +85,7 @@ export const MissionCard: React.FC<MissionCardProps> = ({ mission, onOpenDetail 
       {/* Body Metadata */}
       <div>
         <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed mb-4">
-          {mission.shortDescription}
+          {localize(mission.shortDescription)}
         </p>
 
         {/* Technical Footer specs */}
@@ -87,7 +93,7 @@ export const MissionCard: React.FC<MissionCardProps> = ({ mission, onOpenDetail 
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-slate-400">
               <MapPin className="w-3.5 h-3.5 text-slate-400" />
-              Координаты:
+              {t.explorer.cardCoords}
             </span>
             <span className="text-slate-300 font-mono-tabular truncate max-w-[170px]">
               {mission.coordinates.lat}, {mission.coordinates.lon}
@@ -97,17 +103,17 @@ export const MissionCard: React.FC<MissionCardProps> = ({ mission, onOpenDetail 
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-slate-400">
               <Clock className="w-3.5 h-3.5 text-slate-400" />
-              Длительность:
+              {t.explorer.cardDuration}
             </span>
             <span className="text-slate-200 font-mono-tabular truncate max-w-[170px]">
-              {mission.missionDuration.split('(')[0]}
+              {durationText.split('(')[0].trim()}
             </span>
           </div>
 
           <div className="flex items-center justify-between pt-1">
             <span className="flex items-center gap-1.5 text-slate-400">
               <Activity className="w-3.5 h-3.5 text-red-400" />
-              Статус:
+              {t.explorer.cardStatus}
             </span>
             <span
               className={`font-semibold truncate max-w-[170px] ${
@@ -118,7 +124,7 @@ export const MissionCard: React.FC<MissionCardProps> = ({ mission, onOpenDetail 
                   : 'text-slate-300'
               }`}
             >
-              {mission.status}
+              {localize(mission.status)}
             </span>
           </div>
         </div>

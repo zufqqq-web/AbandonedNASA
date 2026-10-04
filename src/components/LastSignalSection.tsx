@@ -1,32 +1,33 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Play, Square, Radio, ExternalLink, ShieldCheck, Volume2, VolumeX, AlertTriangle, FileText, CheckCircle2 } from 'lucide-react';
+import { Play, Square, ExternalLink, Volume2, VolumeX, CheckCircle2 } from 'lucide-react';
 import { spaceAudio } from '../utils/audio';
-import { SignalAudioScenario, SignalFadeType } from '../types/mission';
+import { SignalAudioScenario } from '../types/mission';
+import { LocalizedText } from '../i18n/types';
+import { useT } from '../i18n/LanguageContext';
 
 interface SignalQuoteItem {
   type: 'telemetry' | 'interpretation' | 'team_message';
-  typeLabel: 'Данные аппарата' | 'Интерпретация' | 'Сообщение команды';
-  text: string;
-  attribution: string;
-  context: string;
+  typeLabel: LocalizedText;
+  text: LocalizedText;
+  attribution: LocalizedText;
+  context: LocalizedText;
   sourceUrl: string;
   sourceName: string;
-  clarificationNote?: string;
+  clarificationNote?: LocalizedText;
 }
 
 interface SignalCase {
   id: string;
   vehicle: string;
   designation: string;
-  world: string;
+  world: LocalizedText;
   date: string;
   coordinates: string;
   sol: string;
-  natureOfEnd: string;
+  natureOfEnd: LocalizedText;
   telemetryFact: {
     raw: string;
-    explanation: string;
+    explanation: LocalizedText;
     sourceUrl: string;
     sourceName: string;
   };
@@ -36,8 +37,8 @@ interface SignalCase {
     themeColor: string;
     accentBg: string;
     glowHex: string;
-    activeTitle: string;
-    endStateTitle: string;
+    activeTitle: LocalizedText;
+    endStateTitle: LocalizedText;
     behavior: 'erratic_dropout' | 'drooping_curve' | 'calm_relay' | 'sharp_square_cutoff' | 'steady_plateau';
   };
   sources: Array<{ title: string; url: string }>;
@@ -48,34 +49,82 @@ const signalCases: SignalCase[] = [
     id: 'opportunity',
     vehicle: 'Opportunity',
     designation: 'MER-B (Mars Exploration Rover)',
-    world: 'МАРС // Кратер Индевор, Долина Настойчивости',
+    world: {
+      ru: 'МАРС // Кратер Индевор, Долина Настойчивости',
+      en: 'MARS // Endeavour Crater, Perseverance Valley',
+      uz: 'MARS // Endeavour krateri, Sabr vodiysi',
+    },
     date: '10 июня 2018',
     coordinates: '2.28° S, 354.6° E',
     sol: 'Сол 5111',
-    natureOfEnd: 'Потеря выработки энергии в глобальной пылевой буре планетарного масштаба',
+    natureOfEnd: {
+      ru: 'Потеря выработки энергии в глобальной пылевой буре планетарного масштаба',
+      en: 'Loss of solar generation in a planetary-scale dust storm',
+      uz: 'Global sayyoraviy chang bo‘ronida quyosh quvvatining to‘liq yo‘qotilishi',
+    },
     telemetryFact: {
       raw: 'TAUP > 10.8 // SOLAR ARRAY: ~22 Wh/sol // PBIT: NOMINAL // X-BAND CARRIER DROPPED',
-      explanation: 'В полдень на Марсе оптическая толщина атмосферы tau превысила 10.8 (непрозрачность более 99%). Суточная генерация солнечных батарей упала с 600 до 22 ватт-часов. По оценке команды инженеров NASA JPL, это привело к необратимому переохлаждению и разряду аккумуляторов.',
+      explanation: {
+        ru: 'В полдень на Марсе оптическая толщина атмосферы tau превысила 10.8 (непрозрачность более 99%). Суточная генерация солнечных батарей упала с 600 до 22 ватт-часов. По оценке команды инженеров NASA JPL, это привело к необратимому переохлаждению и разряду аккумуляторов.',
+        en: 'At local Martian noon, atmospheric optical depth tau exceeded 10.8 (>99% opacity). Daily solar generation plunged from 600 to 22 Wh. According to NASA JPL engineers, this caused irrecoverable freezing and battery discharge.',
+        uz: 'Mars peshinida atmosferaning optik qalinligi tau 10.8 dan oshdi (xiralik 99% dan ortiq). Quyosh batareyalarining kunlik quvvati 600 dan 22 Vt·soatgacha tushib ketdi. NASA JPL muhandislari xulosasiga ko‘ra, bu akkumulyatorlarning sovuqdan muzlashi va tugashiga olib keldi.',
+      },
       sourceUrl: 'https://science.nasa.gov/mission/mer-opportunity/',
       sourceName: 'NASA Science: MER Opportunity Mission'
     },
     quotes: [
       {
         type: 'interpretation',
-        typeLabel: 'Интерпретация',
-        text: '«Моя батарея разряжена, и вокруг темнеет (My battery is low and it\'s getting dark)».',
-        attribution: 'Джейкоб Марголис (Jacob Margolis), научный журналист радио KPCC / NPR',
-        context: 'Февраль 2019, публикация в медиа',
+        typeLabel: {
+          ru: 'Интерпретация',
+          en: 'Interpretation',
+          uz: 'Talqin',
+        },
+        text: {
+          ru: '«Моя батарея разряжена, и вокруг темнеет (My battery is low and it\'s getting dark)».',
+          en: '“My battery is low and it’s getting dark.”',
+          uz: '«Batareyam quvvatsizlandi va atrof qorong‘ilashmoqda (My battery is low and it’s getting dark)».',
+        },
+        attribution: {
+          ru: 'Джейкоб Марголис (Jacob Margolis), научный журналист радио KPCC / NPR',
+          en: 'Jacob Margolis, KPCC / NPR science reporter',
+          uz: 'Jeykob Margolis, KPCC / NPR ilmiy jurnalisti',
+        },
+        context: {
+          ru: 'Февраль 2019, публикация в медиа',
+          en: 'February 2019 media report',
+          uz: '2019-yil fevral, ommaviy axborot vositalaridagi maqola',
+        },
         sourceUrl: 'https://www.npr.org/2019/02/13/694354249/opportunity-rover-falls-silent-on-mars',
         sourceName: 'NPR / KPCC News',
-        clarificationNote: 'ВАЖНО: Ровер НИКОГДА не передавал эти слова. Это эмоциональный перевод журналиста, обобщившего сухие данные JPL о падении заряда АКБ и непрозрачности марсианского неба tau > 10.8.'
+        clarificationNote: {
+          ru: 'ВАЖНО: Ровер НИКОГДА не передавал эти слова. Это эмоциональный перевод журналиста, обобщившего сухие данные JPL о падении заряда АКБ и непрозрачности марсианского неба tau > 10.8.',
+          en: 'NOTE: The rover NEVER transmitted these words. It was an evocative interpretation by a journalist summarizing raw JPL telemetry on dying batteries and sky opacity tau > 10.8.',
+          uz: 'MUHIM: Rover HECH QACHON bu so‘zlarni uzatmagan. Bu JPL telemetriyasidagi akkumulyator zaryadi va tau > 10.8 qorong‘iligini xulosa qilgan jurnalistning his-tuyg‘uli talqinidir.',
+        }
       },
       {
         type: 'team_message',
-        typeLabel: 'Сообщение команды',
-        text: '«Мы предприняли все мыслимые инженерные попытки восстановить контакт с Opportunity... Вероятность ответа ничтожно мала. Мы объявляем завершение миссии с чувством глубокой благодарности».',
-        attribution: 'Джон Каллас (John Callas), руководитель проекта Opportunity в NASA JPL',
-        context: '13 февраля 2019, пресс-конференция в Пасадене',
+        typeLabel: {
+          ru: 'Сообщение команды',
+          en: 'Team Message',
+          uz: 'Jamoa xabari',
+        },
+        text: {
+          ru: '«Мы предприняли все мыслимые инженерные попытки восстановить контакт с Opportunity... Вероятность ответа ничтожно мала. Мы объявляем завершение миссии с чувством глубокой благодарности».',
+          en: '“We have made every reasonable engineering effort to try to restore contact with Opportunity... The likelihood of receiving a signal is far too low. We declare mission completion with deep gratitude.”',
+          uz: '«Biz Opportunity bilan aloqani tiklash uchun barcha muhandislik choralarini ko‘rdik... Javob signali olish ehtimoli nihoyatda past. Biz cheksiz minnatdorlik tuyg‘usi bilan missiya yakunlanganini e’lon qilamiz».',
+        },
+        attribution: {
+          ru: 'Джон Каллас (John Callas), руководитель проекта Opportunity в NASA JPL',
+          en: 'John Callas, Opportunity Project Manager at NASA JPL',
+          uz: 'Jon Kallas, NASA JPL’dagi Opportunity loyihasi rahbari',
+        },
+        context: {
+          ru: '13 февраля 2019, пресс-конференция в Пасадене',
+          en: 'February 13, 2019 Pasadena press briefing',
+          uz: '2019-yil 13-fevral, Pasadenadagi matbuot anjumani',
+        },
         sourceUrl: 'https://www.jpl.nasa.gov/news/nasas-record-setting-opportunity-rover-mission-on-mars-comes-to-end',
         sourceName: 'NASA JPL Release 2019-02-13'
       }
@@ -93,8 +142,16 @@ const signalCases: SignalCase[] = [
       themeColor: 'text-amber-500',
       accentBg: 'bg-amber-500',
       glowHex: '#f97316',
-      activeTitle: 'ЗАТУХАНИЕ РЫВКАМИ // НАРАСТАНИЕ ШУМА БУРИ',
-      endStateTitle: 'СИГНАЛ ПОТЕРЯН // ПОЛНАЯ ТИШИНА',
+      activeTitle: {
+        ru: 'ЗАТУХАНИЕ РЫВКАМИ // НАРАСТАНИЕ ШУМА БУРИ',
+        en: 'INTERMITTENT FADE // RISING STORM NOISE',
+        uz: 'UZUQ-YULIQ SO‘NISH // BO‘RON SHOVQINI OSHISHI',
+      },
+      endStateTitle: {
+        ru: 'СИГНАЛ ПОТЕРЯН // ПОЛНАЯ ТИШИНА',
+        en: 'CARRIER LOST // DEAD SILENCE',
+        uz: 'SIGNAL YO‘QOTILDI // TO‘LIQ SUKUNAT',
+      },
       behavior: 'erratic_dropout'
     },
     sources: [
@@ -106,43 +163,107 @@ const signalCases: SignalCase[] = [
     id: 'spirit',
     vehicle: 'Spirit',
     designation: 'MER-A (Mars Exploration Rover)',
-    world: 'МАРС // Кратер Гусев, Песчаная ловушка «Троя»',
+    world: {
+      ru: 'МАРС // Кратер Гусев, Песчаная ловушка «Троя»',
+      en: 'MARS // Gusev Crater, "Troy" Sulfate Sand Trap',
+      uz: 'MARS // Gusev krateri, «Troya» sulfat qum tuzog‘i',
+    },
     date: '22 марта 2010',
     coordinates: '14.57° S, 175.47° E',
     sol: 'Сол 2210',
-    natureOfEnd: 'Отказ обогрева и переохлаждение передатчика в ловушке сульфатных песков',
+    natureOfEnd: {
+      ru: 'Отказ обогрева и переохлаждение передатчика в ловушке сульфатных песков',
+      en: 'Loss of survival heating and freezing of transmitter in sulfate sand trap',
+      uz: 'Sulfat qum tuzog‘ida isitish tizimining to‘xtashi va uzatgichning muzlashi',
+    },
     telemetryFact: {
       raw: 'SOLAR POWER: ~134 Wh/sol // LOW-POWER SLEEP MODE // CARRIER UNLOCKED (SOL 2210)',
-      explanation: 'Застрявший ровер не смог накрениться к северу для встречи низкого зимнего марсианского солнца. По предположению команды миссии JPL, недостаток энергии не позволил питать внутренние нагреватели, что привело к замерзанию аппарата и сбою тактового генератора.',
+      explanation: {
+        ru: 'Застрявший ровер не смог накрениться к северу для встречи низкого зимнего марсианского солнца. По предположению команды миссии JPL, недостаток энергии не позволил питать внутренние нагреватели, что привело к замерзанию аппарата и сбою тактового генератора.',
+        en: 'Immobilized rover was unable to tilt northward to catch the low Martian winter sun. JPL engineers determined that insufficient power shut down survival heaters, freezing internal electronics.',
+        uz: 'Qumga botgan rover past qishki Mars quyoshiga qarab shimolga og‘a olmadi. JPL jamoasi xulosasiga ko‘ra, quvvat yetishmasligi sabab isitkichlar o‘chib, bort elektronikasining muzlashiga olib keldi.',
+      },
       sourceUrl: 'https://science.nasa.gov/mission/mer-spirit/',
       sourceName: 'NASA Science: MER Spirit Mission'
     },
     quotes: [
       {
         type: 'telemetry',
-        typeLabel: 'Данные аппарата',
-        text: '«Сол 2210: статус шины электропитания — переход в режим сна для консервации тепла; прямая связь X-band с Землей прервана (по реконструкции JPL)».',
-        attribution: 'Телеметрический отчет миссии Spirit (NASA JPL)',
-        context: '22 марта 2010 года, последний контакт с Землей',
+        typeLabel: {
+          ru: 'Данные аппарата',
+          en: 'Flight Telemetry',
+          uz: 'Apparat telemetriyasi',
+        },
+        text: {
+          ru: '«Сол 2210: статус шины электропитания — переход в режим сна для консервации тепла; прямая связь X-band с Землей прервана (по реконструкции JPL)».',
+          en: '“Sol 2210: power bus status — transitioning to deep sleep for thermal conservation; direct X-band link with Earth severed (JPL reconstruction).”',
+          uz: '«Sol 2210: elektr ta’minoti shinasining holati — issiqlikni saqlash uchun chuqur uyqu rejimiga o‘tish; Yer bilan to‘g‘ridan-to‘g‘ri X-band aloqasi uzildi (JPL tahlili)».',
+        },
+        attribution: {
+          ru: 'Телеметрический отчет миссии Spirit (NASA JPL)',
+          en: 'NASA JPL Spirit Flight Telemetry Report',
+          uz: 'Spirit missiyasining NASA JPL telemetriya hisoboti',
+        },
+        context: {
+          ru: '22 марта 2010 года, последний контакт с Землей',
+          en: 'March 22, 2010 final transmission',
+          uz: '2010-yil 22-mart, Yer bilan so‘nggi aloqa',
+        },
         sourceUrl: 'https://science.nasa.gov/mission/mer-spirit/',
         sourceName: 'NASA Planetary Data / Science Mission'
       },
       {
         type: 'interpretation',
-        typeLabel: 'Интерпретация',
-        text: '«Ровер замерз в ледяной ночи на краю холмов Колумбия».',
-        attribution: 'Публицистический пересказ в научно-популярных изданиях',
-        context: '2010-2011 годы',
+        typeLabel: {
+          ru: 'Интерпретация',
+          en: 'Interpretation',
+          uz: 'Talqin',
+        },
+        text: {
+          ru: '«Ровер замерз в ледяной ночи на краю холмов Колумбия».',
+          en: '“The rover froze in the glacial night on the slopes of Columbia Hills.”',
+          uz: '«Rover Kolumbiya tepaliklari yonbag‘rida qahraton tunida muzlab qoldi».',
+        },
+        attribution: {
+          ru: 'Публицистический пересказ в научно-популярных изданиях',
+          en: 'Popular science press retellings',
+          uz: 'Ilmiy-ommabop nashrlardagi talqin',
+        },
+        context: {
+          ru: '2010-2011 годы',
+          en: '2010–2011 media',
+          uz: '2010–2011 yillar',
+        },
         sourceUrl: 'https://www.jpl.nasa.gov/news/nasa-ends-efforts-to-contact-spirit',
         sourceName: 'NASA JPL News Release',
-        clarificationNote: 'По расчетам команды миссии, температура шасси опустилась ниже -55°C, из-за чего батареи потеряли ёмкость, а тактовый генератор сбился.'
+        clarificationNote: {
+          ru: 'По расчетам команды миссии, температура шасси опустилась ниже -55°C, из-за чего батареи потеряли ёмкость, а тактовый генератор сбился.',
+          en: 'Per mission calculations, chassis temperature fell below -55°C, causing battery failure and clock oscillator drift.',
+          uz: 'Missiya jamoasi hisobiga ko‘ra, shassi harorati -55°C dan pastga tushib, batareyalar quvvati tugagan va takt generatori ishdan chiqqan.',
+        }
       },
       {
         type: 'team_message',
-        typeLabel: 'Сообщение команды',
-        text: '«Спирит проработал более 6 лет вместо проектных 90 дней. Даже обездвиженный в песках Трои, он продолжал делать открытия до последнего ватта энергии».',
-        attribution: 'Джон Каллас, руководитель проекта MER в JPL',
-        context: 'Май 2011, официальное завершение попыток вызова',
+        typeLabel: {
+          ru: 'Сообщение команды',
+          en: 'Team Message',
+          uz: 'Jamoa xabari',
+        },
+        text: {
+          ru: '«Спирит проработал более 6 лет вместо проектных 90 дней. Даже обездвиженный в песках Трои, он продолжал делать открытия до последнего ватта энергии».',
+          en: '“Spirit worked for over six years instead of the planned 90 days. Even trapped in Troy sands, it continued making discoveries down to its last watt.”',
+          uz: '«Spirit rejalashtirilgan 90 kun o‘rniga 6 yildan ortiq ishladi. Hatto Troya qumlarida harakatsiz qolganida ham, u so‘nggi vatt quvvatigacha yangi kashfiyotlar qilishni davom ettirdi».',
+        },
+        attribution: {
+          ru: 'Джон Каллас, руководитель проекта MER в JPL',
+          en: 'John Callas, MER Project Manager at JPL',
+          uz: 'Jon Kallas, JPL MER loyihasi rahbari',
+        },
+        context: {
+          ru: 'Май 2011, официальное завершение попыток вызова',
+          en: 'May 2011 formal conclusion of recovery attempts',
+          uz: '2011-yil may, chaqiruv urinishlarining rasmiy yakunlanishi',
+        },
         sourceUrl: 'https://www.jpl.nasa.gov/news/nasa-ends-efforts-to-contact-spirit',
         sourceName: 'NASA JPL Release 2011-156'
       }
@@ -160,8 +281,16 @@ const signalCases: SignalCase[] = [
       themeColor: 'text-cyan-400',
       accentBg: 'bg-cyan-500',
       glowHex: '#06b6d4',
-      activeTitle: 'ДРЕЙФ ЧАСТОТЫ ВНИЗ // ЗАМЕРЗАНИЕ ГЕНЕРАТОРА',
-      endStateTitle: 'ОСТАНОВКА ТАКТОВОГО ГЕНЕРАТОРА // ГИБЕРНАЦИЯ',
+      activeTitle: {
+        ru: 'ДРЕЙФ ЧАСТОТЫ ВНИЗ // ЗАМЕРЗАНИЕ ГЕНЕРАТОРА',
+        en: 'FREQUENCY DOWNWARD DRIFT // GENERATOR FREEZE',
+        uz: 'CHASTOTANING PASTGA SILJISHI // GENERATOR MUZLASHI',
+      },
+      endStateTitle: {
+        ru: 'ОСТАНОВКА ТАКТОВОГО ГЕНЕРАТОРА // ГИБЕРНАЦИЯ',
+        en: 'CLOCK OSCILLATOR HALT // HIBERNATION',
+        uz: 'TAKT GENERATORI TO‘XTASHI // GIBERNATSIYA',
+      },
       behavior: 'drooping_curve'
     },
     sources: [
@@ -173,33 +302,77 @@ const signalCases: SignalCase[] = [
     id: 'insight',
     vehicle: 'InSight',
     designation: 'Interior Exploration using Seismic Investigations',
-    world: 'МАРС // Равнина Элизий (Elysium Planitia)',
-    date: '15 декабря 2022 (завершение объявлено 21 декабря 2022)',
+    world: {
+      ru: 'МАРС // Равнина Элизий (Elysium Planitia)',
+      en: 'MARS // Elysium Planitia',
+      uz: 'MARS // Eliziy tekisligi (Elysium Planitia)',
+    },
+    date: '15 декабря 2022',
     coordinates: '4.50° N, 135.62° E',
     sol: 'Сол 1440',
-    natureOfEnd: 'Необратимое накопление слоя пыли на солнечных батареях UltraFlex',
+    natureOfEnd: {
+      ru: 'Необратимое накопление слоя пыли на солнечных батареях UltraFlex',
+      en: 'Irreversible dust accumulation on UltraFlex solar arrays',
+      uz: 'UltraFlex quyosh panellarida chang qatlamining qaytarib bo‘lmas to‘planishi',
+    },
     telemetryFact: {
       raw: 'SOLAR BUS: ~285 Wh/sol // IDC CAMERA: SEIS IN DUST // DSN CARRIER SILENT',
-      explanation: 'Ветровые вихри не очистили панели станции. Суточная выработка упала с 5000 до ~285 ватт-часов. После передачи финального снимка сейсмометра 15 декабря 2022 года связь прекратилась (по предположению команды миссии, буферная батарея окончательно разрядилась).',
+      explanation: {
+        ru: 'Ветровые вихри не очистили панели станции. Суточная выработка упала с 5000 до ~285 ватт-часов. После передачи финального снимка сейсмометра 15 декабря 2022 года связь прекратилась (по предположению команды миссии, буферная батарея окончательно разрядилась).',
+        en: 'Dust devils failed to clean the arrays. Daily solar generation plummeted from 5,000 to ~285 Wh. Following transmission of its final seismometer image on Dec 15, 2022, contact ceased due to battery depletion.',
+        uz: 'Mars quyunlari panellarni tozalamadi. Kunlik quvvat 5000 dan ~285 Vt·soatgacha tushib ketdi. 2022-yil 15-dekabrda so‘nggi seysmometr surati uzatilgach, akkumulyator tugab aloqa butkul to‘xtadi.',
+      },
       sourceUrl: 'https://mars.nasa.gov/insight/mission/status/',
       sourceName: 'NASA InSight Mission Updates'
     },
     quotes: [
       {
         type: 'team_message',
-        typeLabel: 'Сообщение команды',
-        text: '«Мой заряд совсем мал, так что это, возможно, последний снимок, который я могу отправить. Не переживайте за меня: мое время здесь было продуктивным и безмятежным. Если смогу продолжить говорить с моей командой, я сделаю это — но скоро я отключусь. Спасибо, что оставались со мной».',
-        attribution: 'Официальный аккаунт миссии @NASAInSight в соцсети Twitter/X',
-        context: '19 декабря 2022, публикация команды связей с общественностью NASA',
+        typeLabel: {
+          ru: 'Сообщение команды',
+          en: 'Team Message',
+          uz: 'Jamoa xabari',
+        },
+        text: {
+          ru: '«Мой заряд совсем мал, так что это, возможно, последний снимок, который я могу отправить. Не переживайте за меня: мое время здесь было продуктивным и безмятежным. Если смогу продолжить говорить с моей командой, я сделаю это — но скоро я отключусь. Спасибо, что оставались со мной».',
+          en: '“My power’s really low, so this may be the last image I can send. Don’t worry about me: my time here has been productive and serene. If I can keep talking to my team, I will — but I’ll be signing off here soon. Thanks for staying with me.”',
+          uz: '«Quyosh quvvatim deyarli tugadi, bu men yubora oladigan oxirgi surat bo‘lishi mumkin. Men haqimda qayg‘urmang: bu yerdagi vaqtim sermahsul va sokin o‘tdi. Agar jamoam bilan gaplashishda davom eta olsam, shunday qilaman — lekin tez orada o‘chaman. Men bilan bo‘lganingiz uchun rahmat».',
+        },
+        attribution: {
+          ru: 'Официальный аккаунт миссии @NASAInSight в соцсети Twitter/X',
+          en: 'Official @NASAInSight Mission Account on Twitter/X',
+          uz: '@NASAInSight missiyasining Twitter/X rasmiy sahifasi',
+        },
+        context: {
+          ru: '19 декабря 2022, публикация команды связей с общественностью NASA',
+          en: 'Dec 19, 2022 NASA outreach release',
+          uz: '2022-yil 19-dekabr, NASA jamoatchilik xizmati posti',
+        },
         sourceUrl: 'https://twitter.com/NASAInSight/status/1604955577651044352',
         sourceName: 'Official NASA InSight Twitter/X Feed'
       },
       {
         type: 'telemetry',
-        typeLabel: 'Данные аппарата',
-        text: '«По данным телеметрии миссии на Сол 1440, суточная генерация энергии упала примерно до 285 Вт·ч, после чего аппарат не ответил на вызовы сети DSN (по предположению команды миссии, сработала автоматическая защита от глубокого разряда АКБ)».',
-        attribution: 'Пресс-релиз NASA HQ 22-132 о завершении миссии InSight',
-        context: '21 декабря 2022 года, официальный отчет NASA',
+        typeLabel: {
+          ru: 'Данные аппарата',
+          en: 'Flight Telemetry',
+          uz: 'Apparat telemetriyasi',
+        },
+        text: {
+          ru: '«По данным телеметрии миссии на Сол 1440, суточная генерация энергии упала примерно до 285 Вт·ч, после чего аппарат не ответил на вызовы сети DSN (по предположению команды миссии, сработала автоматическая защита от глубокого разряда АКБ)».',
+          en: '“Per Sol 1440 telemetry, daily energy output dropped to ~285 Wh, following which the lander did not respond to DSN link passes (likely triggering battery deep-discharge protection).”',
+          uz: '«Sol 1440 telemetriyasiga ko‘ra, kunlik energiya ~285 Vt·soatgacha tushib ketdi, shundan so‘ng apparat DSN tarmoq chaqiruvlariga javob bermadi (avtomatik chuqur zaryadsizlanish himoyasi ishga tushgan deb taxmin qilinadi)».',
+        },
+        attribution: {
+          ru: 'Пресс-релиз NASA HQ 22-132 о завершении миссии InSight',
+          en: 'NASA Headquarters Release 22-132 on InSight Conclusion',
+          uz: 'InSight missiyasi yakuniga bag‘ishlangan NASA HQ 22-132 press-relizi',
+        },
+        context: {
+          ru: '21 декабря 2022 года, официальный отчет NASA',
+          en: 'Dec 21, 2022 official report',
+          uz: '2022-yil 21-dekabr, NASA rasmiy hisoboti',
+        },
         sourceUrl: 'https://www.nasa.gov/news-release/nasas-insight-mission-ends-after-four-years-of-groundbreaking-science/',
         sourceName: 'NASA Headquarters Release 22-132'
       }
@@ -217,8 +390,16 @@ const signalCases: SignalCase[] = [
       themeColor: 'text-amber-400',
       accentBg: 'bg-amber-400',
       glowHex: '#eab308',
-      activeTitle: 'СТАБИЛЬНЫЙ СИГНАЛ // РАЗРЯД ПИТАНИЯ // ЩЕЛЧОК РЕЛЕ',
-      endStateTitle: 'ОТКЛЮЧЕНИЕ ШИНЫ ПИТАНИЯ // РЕЛЕ РАЗОМКНУТО',
+      activeTitle: {
+        ru: 'СТАБИЛЬНЫЙ СИГНАЛ // РАЗРЯД ПИТАНИЯ // ЩЕЛЧОК РЕЛЕ',
+        en: 'STABLE CARRIER // POWER DRAIN // RELAY CLICK',
+        uz: 'BARQAROR SIGNAL // QUVVAT TUGASHI // RELE CHIQILLASHI',
+      },
+      endStateTitle: {
+        ru: 'ОТКЛЮЧЕНИЕ ШИНЫ ПИТАНИЯ // РЕЛЕ РАЗОМКНУТО',
+        en: 'POWER BUS CUTOFF // RELAY OPEN',
+        uz: 'QUVVAT SHINASI O‘CHISHI // RELE AJRALISHI',
+      },
       behavior: 'calm_relay'
     },
     sources: [
@@ -230,33 +411,77 @@ const signalCases: SignalCase[] = [
     id: 'apollo17-alsep',
     vehicle: 'Apollo 17 ALSEP',
     designation: 'Apollo Lunar Surface Experiments Package',
-    world: 'ЛУНА // Долина Тавр-Литтров (Taurus-Littrow)',
+    world: {
+      ru: 'ЛУНА // Долина Тавр-Литтров (Taurus-Littrow)',
+      en: 'MOON // Taurus-Littrow Valley',
+      uz: 'OY // Tavr-Littrov vodiysi (Taurus-Littrow)',
+    },
     date: '30 сентября 1977 года',
     coordinates: '20.19° N, 30.77° E',
-    sol: 'Завершение программы: 30 сентября 1977',
-    natureOfEnd: 'Принудительное отключение научной программы командой с Земли по бюджетным причинам',
+    sol: '30.09.1977',
+    natureOfEnd: {
+      ru: 'Принудительное отключение научной программы командой с Земли по бюджетным причинам',
+      en: 'Deliberate command shutdown by Earth ground control due to budget constraints',
+      uz: 'Byudjet qisqarishi sababli Yerdan berilgan buyruq bilan majburiy o‘chirilishi',
+    },
     telemetryFact: {
       raw: 'SNAP-27 RTG: ~68 W // S-BAND 2278.0 MHz: ACTIVE // GROUND COMMAND: SCIENCE OPERATIONS TERMINATED',
-      explanation: 'Станция НЕ имела поломок. Плутониевый РИТЭГ вырабатывал устойчивое питание, а сейсмометр фиксировал удары метеоритов. NASA прекратило финансирование наземной сети слежения ALSEP по решению руководства агентства и конгресса ($5 млн/год). Несущий радиосигнал станций фиксировался астрономами до конца 1977 года.',
+      explanation: {
+        ru: 'Станция НЕ имела поломок. Плутониевый РИТЭГ вырабатывал устойчивое питание, а сейсмометр фиксировал удары метеоритов. NASA прекратило финансирование наземной сети слежения ALSEP по решению руководства агентства и конгресса ($5 млн/год). Несущий радиосигнал станций фиксировался астрономами до конца 1977 года.',
+        en: 'The station suffered NO technical faults. The SNAP-27 plutonium RTG supplied steady power, and seismometers recorded lunar quakes. NASA terminated funding for the ALSEP ground tracking network under congressional budget constraints ($5M/yr).',
+        uz: 'Stansiyada HECH QANDAY nosozlik bo‘lmagan. Plutoniy RTG generatori barqaror quvvat bergan, seysmometr esa Oydagi zarbalarni qayd etgan. NASA Kongress byudjeti qisqarishi tufayli ALSEP kuzatuv tarmog‘ini moliyalashtirishni to‘xtatdi (yiliga 5 mln dollar).',
+      },
       sourceUrl: 'https://curator.jsc.nasa.gov/lunar/alsep.cfm',
       sourceName: 'NASA Johnson Space Center ALSEP Termination Report'
     },
     quotes: [
       {
         type: 'team_message',
-        typeLabel: 'Сообщение команды',
-        text: '«Отключение научных станций ALSEP было продиктовано исключительно бюджетными ограничениями NASA, а не техническими неисправностями оборудования. Они могли надежно передавать геофизические данные еще много лет».',
-        attribution: 'Джеймс Бейтс (James Bates), менеджер научной программы ALSEP в NASA JSC',
-        context: 'Сентябрь 1977 года, официальное коммюнике NASA',
+        typeLabel: {
+          ru: 'Сообщение команды',
+          en: 'Team Message',
+          uz: 'Jamoa xabari',
+        },
+        text: {
+          ru: '«Отключение научных станций ALSEP было продиктовано исключительно бюджетными ограничениями NASA, а не техническими неисправностями оборудования. Они могли надежно передавать геофизические данные еще много лет».',
+          en: '“The shutdown of ALSEP scientific stations was dictated solely by NASA budgetary limits, not equipment failures. They could have transmitted geophysical data for many more years.”',
+          uz: '«ALSEP ilmiy stansiyalarining o‘chirilishi uskunaning texnik nosozligi emas, balki faqat NASA byudjet cheklovlari bilan bog‘liq edi. Ular yana ko‘p yillar davomida ishonchli geofizik ma’lumotlarni uzata olar edi».',
+        },
+        attribution: {
+          ru: 'Джеймс Бейтс (James Bates), менеджер научной программы ALSEP в NASA JSC',
+          en: 'James Bates, ALSEP Program Manager at NASA JSC',
+          uz: 'Jeyms Beyts, NASA JSC ALSEP ilmiy dasturi menejeri',
+        },
+        context: {
+          ru: 'Сентябрь 1977 года, официальное коммюнике NASA',
+          en: 'September 1977 official NASA communiqué',
+          uz: '1977-yil sentyabr, NASA rasmiy kommyunikesi',
+        },
         sourceUrl: 'https://history.nasa.gov/SP-407/sp407.htm',
         sourceName: 'NASA History Office: Apollo Expeditions to the Moon (SP-407)'
       },
       {
         type: 'telemetry',
-        typeLabel: 'Данные аппарата',
-        text: '«30 сентября 1977 года: По командам наземных станций сети MSFN научные эксперименты станций ALSEP были переведены в пассивный режим после 8 лет работы».',
-        attribution: 'Отчет NASA Johnson Space Center (ALSEP Termination, 1979)',
-        context: '30 сентября 1977 года, завершение поддержки сети станций Apollo 12, 14, 15, 16, 17',
+        typeLabel: {
+          ru: 'Данные аппарата',
+          en: 'Flight Telemetry',
+          uz: 'Apparat telemetriyasi',
+        },
+        text: {
+          ru: '«30 сентября 1977 года: По командам наземных станций сети MSFN научные эксперименты станций ALSEP были переведены в пассивный режим после 8 лет работы».',
+          en: '“September 30, 1977: Pursuant to commands from MSFN tracking stations, ALSEP scientific experiments were placed into passive mode after 8 years of operations.”',
+          uz: '«1977-yil 30-sentyabr: MSFN yer stansiyalari buyrug‘i bilan ALSEP ilmiy tajribalari 8 yillik faoliyatdan so‘ng passiv rejimga o‘tkazildi».',
+        },
+        attribution: {
+          ru: 'Отчет NASA Johnson Space Center (ALSEP Termination, 1979)',
+          en: 'NASA Johnson Space Center ALSEP Termination Report (1979)',
+          uz: 'NASA Jonson kosmik markazi ALSEP hisoboti (1979)',
+        },
+        context: {
+          ru: '30 сентября 1977 года, завершение поддержки сети станций Apollo 12, 14, 15, 16, 17',
+          en: 'Sept 30, 1977 conclusion of Apollo 12, 14, 15, 16, 17 network support',
+          uz: '1977-yil 30-sentyabr, Apollo stansiyalari tarmog‘ini qo‘llab-quvvatlashning yakunlanishi',
+        },
         sourceUrl: 'https://curator.jsc.nasa.gov/lunar/alsep.cfm',
         sourceName: 'NASA JSC Lunar Science Information'
       }
@@ -275,8 +500,16 @@ const signalCases: SignalCase[] = [
       themeColor: 'text-emerald-400',
       accentBg: 'bg-emerald-500',
       glowHex: '#22c55e',
-      activeTitle: 'ШТАТНЫЙ СИГНАЛ 1970-Х // МГНОВЕННЫЙ ОБРЫВ ПО КОМАНДЕ',
-      endStateTitle: 'ОБРЫВ НЕСУЩЕЙ // КОМАНДА ОТКЛЮЧЕНИЯ ИЗ ХЬЮСТОНА',
+      activeTitle: {
+        ru: 'ШТАТНЫЙ СИГНАЛ 1970-Х // МГНОВЕННЫЙ ОБРЫВ ПО КОМАНДЕ',
+        en: 'NOMINAL 1970s CARRIER // INSTANT COMMAND CUTOFF',
+        uz: '1970-YILLARNING ME’YORIY SIGNALI // BUYRUQ BILAN BIR LAHZADA UZILISH',
+      },
+      endStateTitle: {
+        ru: 'ОБРЫВ НЕСУЩЕЙ // КОМАНДА ОТКЛЮЧЕНИЯ ИЗ ХЬЮСТОНА',
+        en: 'CARRIER CUTOFF // SHUTDOWN COMMAND DISPATCHED',
+        uz: 'TASHUVCHI TO‘LQIN UZILISHI // XUSTONDAN O‘CHIRISH BUYRUG‘I',
+      },
       behavior: 'sharp_square_cutoff'
     },
     sources: [
@@ -288,36 +521,84 @@ const signalCases: SignalCase[] = [
     id: 'ingenuity',
     vehicle: 'Ingenuity',
     designation: 'Mars Helicopter Scout (Ginny)',
-    world: 'МАРС // Кратер Езеро, Холмы Валинор',
-    date: '18 января 2024 (окончание полетов)',
+    world: {
+      ru: 'МАРС // Кратер Езеро, Холмы Валинор',
+      en: 'MARS // Jezero Crater, Valinor Hills',
+      uz: 'MARS // Jezero krateri, Valinor tepaliklari',
+    },
+    date: '18 января 2024',
     coordinates: '18.4446° N, 77.4509° E',
-    sol: 'Сол 1038 (Полет 72)',
-    natureOfEnd: 'Повреждение конца лопасти винта при жесткой посадке. Аппарат жив и переведен в стационарный метеопост',
+    sol: 'Сол 1038',
+    natureOfEnd: {
+      ru: 'Повреждение конца лопасти винта при жесткой посадке. Аппарат жив и переведен в стационарный метеопост',
+      en: 'Rotor blade tip damage during hard touchdown. Aircraft intact and transitioned to stationary weather outpost',
+      uz: 'Qattiq qo‘nishda parrak uchining shikastlanishi. Apparat ishlamoqda va doimiy meteopostga aylantirilgan',
+    },
     telemetryFact: {
       raw: 'ROTOR ROTATION: HALTED // BLADE TIP SEPARATION DETECTED // AVIONICS & POWER: 100% HEALTHY // ZIGBEE 914 MHz: ACTIVE',
-      explanation: 'Винтокрылая машина совершила 72 полета вместо 5 запланированных. Хотя повреждение лопасти больше не позволяет летать, электроника, солнечная батарея и радиоканал полностью исправны. По решению команды миссии JPL вертолет переведен в режим стационарной базы наблюдений.',
+      explanation: {
+        ru: 'Винтокрылая машина совершила 72 полета вместо 5 запланированных. Хотя повреждение лопасти больше не позволяет летать, электроника, солнечная батарея и радиоканал полностью исправны. По решению команды миссии JPL вертолет переведен в режим стационарной базы наблюдений.',
+        en: 'The helicopter flew 72 times instead of the planned 5. Although blade damage prevents flight, avionics, solar panel, and radio remain functional, serving as a permanent stationary station.',
+        uz: 'Vertolyot rejalashtirilgan 5 parvoz o‘rniga 72 bor havoga ko‘tarildi. Parrak shikastlanishi parvozlarni to‘xtatgan bo‘lsa-da, elektronika, quyosh batareyasi va radioaloqa butkul soz bo‘lib, doimiy kuzatuv bazasiga aylandi.',
+      },
       sourceUrl: 'https://www.jpl.nasa.gov/news/after-three-years-on-mars-nasas-ingenuity-helicopter-mission-ends',
       sourceName: 'NASA JPL News Release 2024'
     },
     quotes: [
       {
         type: 'team_message',
-        typeLabel: 'Сообщение команды',
-        text: '«Историческое путешествие Ingenuity подошло к концу. Этот выдающийся вертолет взлетел выше и дальше, чем мы могли представить, доказав, что управляемый полет на Марсе возможен. Он больше не может подняться в небо, но его приборы продолжают служить науке».',
-        attribution: 'Билл Нельсон (Bill Nelson), администратор NASA',
-        context: '25 января 2024, официальный брифинг NASA HQ',
+        typeLabel: {
+          ru: 'Сообщение команды',
+          en: 'Team Message',
+          uz: 'Jamoa xabari',
+        },
+        text: {
+          ru: '«Историческое путешествие Ingenuity подошло к концу. Этот выдающийся вертолет взлетел выше и дальше, чем мы могли представить, доказав, что управляемый полет на Марсе возможен. Он больше не может подняться в небо, но его приборы продолжают служить науке».',
+          en: '“The historic journey of Ingenuity has come to an end. That remarkable helicopter flew higher and farther than we ever imagined, proving powered flight on Mars is possible. It can no longer fly, but its instruments continue serving science.”',
+          uz: '«Ingenuity’ning tarixiy sayohati nihoyasiga yetdi. Bu ajoyib vertolyot biz tasavvur qilganimizdan ham balandroq va uzoqroq parvoz qilib, Marsda boshqariladigan parvoz mumkinligini isbotladi. U endi osmonga ko‘tarilolmaydi, ammo asboblari ilm-fanga xizmat qilishda davom etadi».',
+        },
+        attribution: {
+          ru: 'Билл Нельсон (Bill Nelson), администратор NASA',
+          en: 'Bill Nelson, NASA Administrator',
+          uz: 'Bill Nelson, NASA ma’muri',
+        },
+        context: {
+          ru: '25 января 2024, официальный брифинг NASA HQ',
+          en: 'Jan 25, 2024 NASA HQ briefing',
+          uz: '2024-yil 25-yanvar, NASA HQ rasmiy brifingi',
+        },
         sourceUrl: 'https://www.nasa.gov/news-release/after-three-years-on-mars-nasas-ingenuity-helicopter-mission-ends/',
         sourceName: 'NASA Headquarters Release 24-009'
       },
       {
         type: 'interpretation',
-        typeLabel: 'Интерпретация',
-        text: '«Сложил крылья, но остался жив: вертолет превратился в постоянную погодную станцию».',
-        attribution: 'Обозреватели космической отрасли и пресс-служба NASA JPL',
-        context: 'Январь 2024 года',
+        typeLabel: {
+          ru: 'Интерпретация',
+          en: 'Interpretation',
+          uz: 'Talqin',
+        },
+        text: {
+          ru: '«Сложил крылья, но остался жив: вертолет превратился в постоянную погодную станцию».',
+          en: '“Folded its wings yet remains alive: the helicopter transformed into an enduring Martian weather station.”',
+          uz: '«Qanotlarini yig‘ishtirdi, ammo tirik qoldi: vertolyot doimiy ob-havo stansiyasiga aylandi».',
+        },
+        attribution: {
+          ru: 'Обозреватели космической отрасли и пресс-служба NASA JPL',
+          en: 'Aerospace observers & NASA JPL press team',
+          uz: 'Koinot sohasi sharhlovchilari va NASA JPL matbuot xizmati',
+        },
+        context: {
+          ru: 'Январь 2024 года',
+          en: 'January 2024',
+          uz: '2024-yil yanvar',
+        },
         sourceUrl: 'https://www.jpl.nasa.gov/news/after-three-years-on-mars-nasas-ingenuity-helicopter-mission-ends',
         sourceName: 'NASA JPL Technical Briefing',
-        clarificationNote: 'Команда JPL обновила бортовое ПО: аппарат просыпается каждое утро, замеряет температуру грунта и параметры датчиков и сохраняет их в бортовую память.'
+        clarificationNote: {
+          ru: 'Команда JPL обновила бортовое ПО: аппарат просыпается каждое утро, замеряет температуру грунта и параметры датчиков и сохраняет их в бортовую память.',
+          en: 'JPL engineers updated flight software: Ingenuity wakes up every Martian morning, logs sensor data and temperatures into flash memory for future missions.',
+          uz: 'JPL jamoasi dasturiy ta’minotni yangiladi: apparat har kuni ertalab uyg‘onib, tuproq harorati va datchiklar ko‘rsatkichini kelajakdagi missiyalar uchun xotirasiga yozib oladi.',
+        }
       }
     ],
     audioScenario: {
@@ -334,8 +615,16 @@ const signalCases: SignalCase[] = [
       themeColor: 'text-teal-400',
       accentBg: 'bg-teal-400',
       glowHex: '#14b8a6',
-      activeTitle: 'БОДРЫЙ СИГНАЛ АВИАЦИИ // НЕТ ЗАТУХАНИЯ',
-      endStateTitle: 'КОНТРОЛЬНАЯ ПАУЗА // АППАРАТ ЖИВ (СТАЦИОНАРНЫЙ ПОСТ)',
+      activeTitle: {
+        ru: 'БОДРЫЙ СИГНАЛ АВИАЦИИ // НЕТ ЗАТУХАНИЯ',
+        en: 'HEALTHY AERIAL CARRIER // ZERO FADE',
+        uz: 'BARQAROR AVIATSIYA SIGNALI // SO‘NISH YO‘Q',
+      },
+      endStateTitle: {
+        ru: 'КОНТРОЛЬНАЯ ПАУЗА // АППАРАТ ЖИВ (СТАЦИОНАРНЫЙ ПОСТ)',
+        en: 'CONTROL PAUSE // CRAFT ALIVE (STATIONARY POST)',
+        uz: 'NAZORAT TANAFFUSI // APPARAT ISHLAMOQDA (STATSIYONAR POST)',
+      },
       behavior: 'steady_plateau'
     },
     sources: [
@@ -346,6 +635,7 @@ const signalCases: SignalCase[] = [
 ];
 
 export const LastSignalSection: React.FC = () => {
+  const { t, localize } = useT();
   const [selectedCase, setSelectedCase] = useState<SignalCase>(signalCases[0]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -420,10 +710,7 @@ export const LastSignalSection: React.FC = () => {
 
   // Spectrum bar calculation function based on scenario behavior
   const computeBarHeight = (barIndex: number, totalBars: number): number => {
-    const normIndex = barIndex / (totalBars - 1); // 0 to 1
-
     if (prefersReducedMotion) {
-      // Accessible static representation during reduced motion
       if (!isPlaying) return 14;
       if (selectedCase.audioScenario.fadeType === 'instant_cutoff') {
         const cutoff = selectedCase.audioScenario.cutoffTimeRatio ?? 0.7;
@@ -436,95 +723,63 @@ export const LastSignalSection: React.FC = () => {
     }
 
     if (!isPlaying) {
-      // Standby subtle idle wave
       return Math.max(4, Math.sin(barIndex * 0.35) * 14 + 14);
     }
 
     switch (selectedCase.visualizer.behavior) {
       case 'erratic_dropout': {
-        // Opportunity: jerky drops, erratic stutter, rising noise
-        if (progress > 0.85) return 2; // Dead silence in final phase
+        if (progress > 0.85) return 2;
         const dropoutDip = (progress > 0.22 && progress < 0.3) || (progress > 0.42 && progress < 0.5) || (progress > 0.65 && progress < 0.74);
         const amplitudeMod = dropoutDip ? 0.15 : (1 - progress * 0.75);
         const noiseScatter = (Math.sin(barIndex * 9.3 + progress * 24) * 0.5 + 0.5) * (progress * 18);
         const wave = Math.sin(barIndex * 0.45 + progress * 16) * 22;
-        return Math.max(3, Math.min(48, Math.round(wave * amplitudeMod + noiseScatter + 6)));
+        return Math.max(2, Math.min(38, Math.round(wave * amplitudeMod + noiseScatter)));
       }
-
       case 'drooping_curve': {
-        // Spirit: smooth downward frequency curve (drooping slope from left to right)
-        if (progress >= 0.98) return 2;
-        const droopFactor = 1 - (progress * 0.85);
-        const frequencySag = Math.exp(-normIndex * (1 + progress * 3));
-        const wave = Math.sin(barIndex * 0.4 + progress * 8) * 18 * droopFactor;
-        return Math.max(3, Math.round((wave * frequencySag + 12 * droopFactor)));
+        if (progress > 0.9) return 2;
+        const fadeMod = Math.max(0.05, Math.pow(1 - progress, 1.8));
+        const slowDriftWave = Math.sin(barIndex * 0.3 + progress * 6) * 20;
+        return Math.max(2, Math.min(38, Math.round(slowDriftWave * fadeMod + 4)));
       }
-
       case 'calm_relay': {
-        // InSight: stable symmetrical bell curve until sharp short fade, followed by single relay click spike
-        const fadeStart = 0.75;
-        const clickPoint = 0.90;
-        if (progress >= clickPoint + 0.04) return 2; // Silence after click
-        if (progress >= clickPoint && progress < clickPoint + 0.04) {
-          // Relay transient mechanical spike!
-          return barIndex % 3 === 0 ? 46 : 8;
-        }
-        const amp = progress < fadeStart ? 1 : Math.max(0.1, 1 - (progress - fadeStart) / 0.15);
-        const bell = Math.sin(normIndex * Math.PI);
-        const wave = Math.sin(barIndex * 0.5 + progress * 10) * 12 + 18;
-        return Math.max(3, Math.round(wave * bell * amp + 4));
+        if (progress > 0.88) return 2;
+        const smoothDecay = 1 - progress * 0.65;
+        const stableToneWave = Math.sin(barIndex * 0.55 + progress * 10) * 18;
+        return Math.max(2, Math.min(38, Math.round(stableToneWave * smoothDecay + 8)));
       }
-
       case 'sharp_square_cutoff': {
-        // Apollo 17 ALSEP: completely flat steady transmission, then instantaneous zero drop
         const cutoff = selectedCase.audioScenario.cutoffTimeRatio ?? 0.7;
-        if (progress >= cutoff) return 2; // Flat line!
-        // Precise analog rectangular telemetry comb
-        const analogComb = (barIndex % 4 === 0) ? 38 : (barIndex % 2 === 0 ? 28 : 18);
-        const analogJitter = Math.sin(barIndex * 0.8 + progress * 14) * 3;
-        return Math.max(4, Math.round(analogComb + analogJitter));
+        if (progress >= cutoff) return 2;
+        const squareLikeWave = Math.sin(barIndex * 0.6 + progress * 12) > 0 ? 30 : 16;
+        return squareLikeWave;
       }
-
-      case 'steady_plateau': {
-        // Ingenuity: active energetic chirps that lock into a solid dual-peak harmonic pause plateau (alive)
-        const transition = 0.65;
-        if (progress < transition) {
-          // Fast lively aviation chirps
-          const chirp = Math.sin(barIndex * 0.8 + progress * 28) * 20 + 20;
-          return Math.max(4, Math.round(chirp));
-        } else {
-          // Harmonious dual harmonic standing peaks (representing 880Hz + 1320Hz active tone)
-          const peak1 = Math.exp(-Math.pow((normIndex - 0.35) * 6, 2)) * 34;
-          const peak2 = Math.exp(-Math.pow((normIndex - 0.70) * 6, 2)) * 32;
-          const baseline = 10;
-          return Math.max(4, Math.round(peak1 + peak2 + baseline));
-        }
+      case 'steady_plateau':
+      default: {
+        const plateauWave = Math.sin(barIndex * 0.4 + progress * 14) * 18 + 16;
+        return Math.max(8, Math.min(38, Math.round(plateauWave)));
       }
-
-      default:
-        return 12;
     }
   };
 
-  return (
-    <section id="last-signal" className="relative py-24 bg-black border-t border-red-950/40 overflow-hidden">
-      {/* Background Subtle Radar Grid */}
-      <div className="absolute inset-0 bg-dot-pattern opacity-10 pointer-events-none" />
+  const totalBars = 36;
+  const bars = Array.from({ length: totalBars }, (_, i) => computeBarHeight(i, totalBars));
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+  return (
+    <section id="last-signal" className="relative py-24 bg-[#030508] border-t border-slate-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center mb-10">
+        <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 text-xs font-mono text-red-500 uppercase tracking-widest mb-3">
-            <Radio className="w-3.5 h-3.5 animate-pulse text-red-500" />
-            <span>АРХИВ ТЕЛЕМЕТРИИ // ПОСЛЕДНИЙ КОНТАКТ</span>
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+            <span>{t.lastSignal.sectionTag}</span>
           </div>
 
           <h2 className="font-display text-3xl sm:text-5xl md:text-6xl font-black text-white uppercase tracking-tight">
-            ПОСЛЕДНИЙ СИГНАЛ
+            {t.lastSignal.title}
           </h2>
 
           <p className="mt-3 text-sm sm:text-base text-slate-300 max-w-2xl mx-auto font-light leading-relaxed">
-            Конец миссии у каждого аппарата был уникальным. Слушайте точные акустические сценарии затухания и изучайте подлинные факты без журналистских мифов.
+            {t.lastSignal.subtitle}
           </p>
         </div>
 
@@ -532,23 +787,23 @@ export const LastSignalSection: React.FC = () => {
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3 text-xs font-mono border-b border-slate-900 pb-4">
           <div className="text-slate-400 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-red-500" />
-            <span>ВЫБЕРИТЕ АППАРАТ ДЛЯ ВОСПРОИЗВЕДЕНИЯ СЦЕНАРИЯ</span>
+            <span>{t.lastSignal.vesselSelector}</span>
           </div>
 
           <div className="flex items-center gap-3">
             {prefersReducedMotion && (
               <span className="text-[11px] text-amber-400 bg-amber-950/40 border border-amber-800/40 px-2 py-0.5 rounded">
-                Уменьшенное движение включено
+                {t.lastSignal.reducedMotionActive}
               </span>
             )}
 
             <button
               onClick={toggleMute}
               className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded text-slate-300 transition-colors"
-              title={isMuted ? 'Включить звук' : 'Отключить звук'}
+              title={isMuted ? t.nav.soundOn : t.nav.soundOff}
             >
               {isMuted ? <VolumeX className="w-3.5 h-3.5 text-slate-500" /> : <Volume2 className="w-3.5 h-3.5 text-emerald-400" />}
-              <span>{isMuted ? 'Звук выключен' : 'Звук включен'}</span>
+              <span>{isMuted ? t.nav.soundOff : t.nav.soundOn}</span>
             </button>
           </div>
         </div>
@@ -574,7 +829,7 @@ export const LastSignalSection: React.FC = () => {
                   />
                 )}
                 <div className="text-[10px] font-mono uppercase text-slate-400 truncate">
-                  {item.world.split('//')[0]}
+                  {localize(item.world).split('//')[0]}
                 </div>
                 <div className="text-sm font-display font-bold text-white uppercase truncate mt-0.5">
                   {item.vehicle}
@@ -600,51 +855,42 @@ export const LastSignalSection: React.FC = () => {
                 }`}
                 style={{ backgroundColor: selectedCase.visualizer.glowHex }}
               />
-              <span className="text-slate-300 font-semibold uppercase tracking-wider">
+              <span className="font-bold text-white tracking-wider uppercase">
                 {selectedCase.vehicle} // {selectedCase.designation}
               </span>
             </div>
 
-            <div className="text-xs font-mono text-slate-400">
-              {selectedCase.world} · <span className="text-slate-300 font-mono-tabular">{selectedCase.sol}</span>
+            <div className="text-[11px] font-mono text-slate-400">
+              {localize(selectedCase.world)} · {selectedCase.coordinates} · {selectedCase.sol}
             </div>
           </div>
 
-          {/* Dynamic Spectrum Waveform */}
-          <div className="my-8">
-            <div className="text-center mb-2">
-              <span className="text-[11px] font-mono tracking-widest uppercase text-slate-400">
-                {isPlaying && progress > 0.85
-                  ? selectedCase.visualizer.endStateTitle
-                  : isPlaying
-                  ? `${selectedCase.visualizer.activeTitle} (${Math.round((1 - progress) * 100)}%)`
-                  : 'СПЕКТР НЕСУЩЕЙ ЧАСТОТЫ // НАЖМИТЕ «ВОСПРОИЗВЕСТИ СИГНАЛ»'}
-              </span>
+          {/* Visualizer Frequency Bars Display */}
+          <div className="py-8 sm:py-12 flex flex-col items-center justify-center">
+            <div className="w-full max-w-2xl h-36 flex items-end justify-between gap-1 sm:gap-2 px-4 bg-slate-950/60 rounded-xl border border-slate-900/90 p-4">
+              {bars.map((h, i) => (
+                <div
+                  key={i}
+                  style={{
+                    height: `${h * 2.5}px`,
+                    backgroundColor: isPlaying ? selectedCase.visualizer.glowHex : '#334155',
+                    boxShadow: isPlaying ? `0 0 10px ${selectedCase.visualizer.glowHex}66` : 'none',
+                    transition: prefersReducedMotion ? 'none' : 'height 0.08s ease, background-color 0.2s',
+                  }}
+                  className="flex-1 rounded-t-sm"
+                />
+              ))}
             </div>
 
-            {/* Visualizer Bars Container */}
-            <div className="h-24 flex items-center justify-center gap-1.5 max-w-xl mx-auto px-4 py-2 bg-slate-950/60 rounded-xl border border-slate-900">
-              {Array.from({ length: 36 }).map((_, idx) => {
-                const height = computeBarHeight(idx, 36);
-                return (
-                  <div
-                    key={idx}
-                    className="w-2 rounded-full transition-all duration-75"
-                    style={{
-                      height: `${height}px`,
-                      backgroundColor: isPlaying
-                        ? selectedCase.visualizer.glowHex
-                        : '#334155',
-                      opacity: isPlaying ? 0.95 : 0.4
-                    }}
-                  />
-                );
-              })}
-            </div>
-
-            {/* Telemetry coordinate line */}
-            <div className="text-center mt-3 text-xs font-mono text-slate-400">
-              КООРДИНАТЫ СТОЯНКИ: <span className="text-slate-300 font-mono-tabular">{selectedCase.coordinates}</span>
+            {/* Dynamic Status Text */}
+            <div className="mt-4 text-center font-mono text-xs text-slate-400 tracking-wider uppercase">
+              {isPlaying ? (
+                <span className="text-white">
+                  {localize(selectedCase.visualizer.activeTitle)} ({(progress * 100).toFixed(0)}%)
+                </span>
+              ) : (
+                <span>{localize(selectedCase.visualizer.endStateTitle)}</span>
+              )}
             </div>
           </div>
 
@@ -661,29 +907,29 @@ export const LastSignalSection: React.FC = () => {
               {isPlaying ? (
                 <>
                   <Square className="w-4 h-4 fill-white" />
-                  <span>ОСТАНОВИТЬ СИМУЛЯЦИЮ</span>
+                  <span>{t.lastSignal.stopSimulation}</span>
                 </>
               ) : (
                 <>
                   <Play className="w-4 h-4 fill-white" />
-                  <span>ВОСПРОИЗВЕСТИ СИГНАЛ ({selectedCase.audioScenario.duration}s)</span>
+                  <span>{t.lastSignal.playSignalWithDuration} ({selectedCase.audioScenario.duration}s)</span>
                 </>
               )}
             </button>
 
             <div className="text-xs font-mono text-slate-400 text-center sm:text-left">
-              Профиль затухания: <span className="text-slate-300">{selectedCase.natureOfEnd}</span>
+              {t.lastSignal.fadeProfile} <span className="text-slate-300">{localize(selectedCase.natureOfEnd)}</span>
             </div>
           </div>
 
-          {/* Fact vs Interpretation Cards (TASK 2: Honest Quotes & Verification) */}
+          {/* Fact vs Interpretation Cards */}
           <div className="mt-8 space-y-6">
             {/* Raw Telemetry Fact */}
             <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
               <div className="flex items-center justify-between gap-2 mb-2">
                 <span className="text-[11px] font-mono uppercase tracking-wider text-emerald-400 bg-emerald-950/50 border border-emerald-800/40 px-2 py-0.5 rounded flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  Данные аппарата (Реальная телеметрия)
+                  {t.lastSignal.telemetryBadge}
                 </span>
                 <a
                   href={selectedCase.telemetryFact.sourceUrl}
@@ -699,7 +945,7 @@ export const LastSignalSection: React.FC = () => {
                 {selectedCase.telemetryFact.raw}
               </div>
               <p className="text-xs text-slate-300 leading-relaxed font-light">
-                {selectedCase.telemetryFact.explanation}
+                {localize(selectedCase.telemetryFact.explanation)}
               </p>
             </div>
 
@@ -725,31 +971,31 @@ export const LastSignalSection: React.FC = () => {
                               : 'text-blue-400 bg-blue-950/60 border-blue-700/50'
                           }`}
                         >
-                          {q.typeLabel}
+                          {localize(q.typeLabel)}
                         </span>
 
                         <span className="text-[10px] font-mono text-slate-400">
-                          {q.context}
+                          {localize(q.context)}
                         </span>
                       </div>
 
                       <blockquote className="text-sm font-serif italic text-slate-100 leading-snug my-2">
-                        {q.text}
+                        {localize(q.text)}
                       </blockquote>
 
                       <div className="text-xs font-mono text-slate-300 mt-2">
-                        — {q.attribution}
+                        — {localize(q.attribution)}
                       </div>
 
                       {q.clarificationNote && (
                         <div className="mt-3 p-2 bg-amber-950/40 border border-amber-800/40 rounded text-[11px] font-mono text-amber-200/90 leading-relaxed">
-                          {q.clarificationNote}
+                          {localize(q.clarificationNote)}
                         </div>
                       )}
                     </div>
 
                     <div className="mt-4 pt-3 border-t border-slate-900 flex items-center justify-between text-[11px] font-mono text-slate-400">
-                      <span>Источник:</span>
+                      <span>{t.lastSignal.sourceLabel}</span>
                       <a
                         href={q.sourceUrl}
                         target="_blank"
@@ -765,10 +1011,10 @@ export const LastSignalSection: React.FC = () => {
               })}
             </div>
 
-            {/* Official Source Reference Links (TASK 3) */}
+            {/* Official Source Reference Links */}
             <div className="p-4 bg-slate-950/60 border border-slate-900 rounded-xl text-xs font-mono text-slate-400 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                ОФИЦИАЛЬНЫЕ ПЕРВОИСТОЧНИКИ NASA / JPL:
+                {t.lastSignal.officialSourcesTitle}
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 {selectedCase.sources.map((src, sIdx) => (

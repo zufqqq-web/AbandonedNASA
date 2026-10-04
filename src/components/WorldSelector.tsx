@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { worldsData } from '../data/worldsData';
 import { Destination } from '../types/mission';
 import { spaceAudio } from '../utils/audio';
+import { useT } from '../i18n/LanguageContext';
 import { Globe, Thermometer, Orbit, Rocket, Radio, Compass } from 'lucide-react';
 
 interface WorldSelectorProps {
@@ -14,6 +15,7 @@ export const WorldSelector: React.FC<WorldSelectorProps> = ({
   selectedWorld,
   onSelectWorld,
 }) => {
+  const { t, localize } = useT();
   const current = worldsData[selectedWorld];
 
   return (
@@ -24,13 +26,13 @@ export const WorldSelector: React.FC<WorldSelectorProps> = ({
           <div>
             <div className="text-xs font-mono text-red-500 uppercase tracking-widest flex items-center gap-2 mb-2">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-              01 // ВЫБОР НЕБЕСНОГО ТЕЛА
+              {t.worldSelector.sectionTag}
             </div>
             <h2 className="font-display text-3xl sm:text-4xl font-bold text-white uppercase tracking-tight">
-              Миры постоянной дислокации
+              {t.worldSelector.title}
             </h2>
             <p className="mt-2 text-sm text-slate-400 max-w-xl">
-              Переключайтесь между Луной и Марсом, чтобы изучить параметры среды, координаты посадочных зон и оставленную технику.
+              {t.worldSelector.subtitle}
             </p>
           </div>
 
@@ -48,7 +50,7 @@ export const WorldSelector: React.FC<WorldSelectorProps> = ({
               }`}
             >
               <div className="w-2 h-2 rounded-full bg-red-400" />
-              <span>MARS // МАРС</span>
+              <span>MARS // {t.worldSelector.marsTitle}</span>
             </button>
 
             <button
@@ -63,7 +65,7 @@ export const WorldSelector: React.FC<WorldSelectorProps> = ({
               }`}
             >
               <div className="w-2 h-2 rounded-full bg-slate-400" />
-              <span>LUNA // ЛУНА</span>
+              <span>LUNA // {t.worldSelector.moonTitle}</span>
             </button>
           </div>
         </div>
@@ -98,19 +100,19 @@ export const WorldSelector: React.FC<WorldSelectorProps> = ({
               <div className="lg:col-span-6">
                 <div className="text-xs font-mono tracking-widest uppercase text-slate-400 flex items-center gap-2 mb-2">
                   <Globe className="w-3.5 h-3.5 text-slate-500" />
-                  <span>Планетарный сектор // {current.englishName}</span>
+                  <span>{t.worldSelector.sectorPrefix} {current.englishName}</span>
                 </div>
 
                 <h3 className="font-display text-4xl sm:text-5xl font-black text-white tracking-tight uppercase">
-                  {current.name}
+                  {localize(current.name)}
                 </h3>
 
                 <p className="mt-2 text-sm sm:text-base font-medium text-slate-300">
-                  {current.tagline}
+                  {localize(current.tagline)}
                 </p>
 
                 <p className="mt-4 text-xs sm:text-sm text-slate-400 leading-relaxed max-w-xl">
-                  {current.description}
+                  {localize(current.description)}
                 </p>
 
                 <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -120,7 +122,7 @@ export const WorldSelector: React.FC<WorldSelectorProps> = ({
                     className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-mono uppercase tracking-wider text-slate-200 rounded border border-slate-700 transition-colors"
                   >
                     <Compass className="w-3.5 h-3.5 text-red-400" />
-                    <span>Смотреть объекты ({current.stats.objectsCount})</span>
+                    <span>{t.worldSelector.viewObjectsBtn} ({current.stats.objectsCount})</span>
                   </a>
                 </div>
               </div>
@@ -130,21 +132,21 @@ export const WorldSelector: React.FC<WorldSelectorProps> = ({
                 <div className="bg-slate-950/70 border border-slate-800/80 rounded-lg p-4">
                   <div className="flex items-center gap-1.5 text-slate-400 text-[11px] font-mono uppercase mb-1">
                     <Rocket className="w-3.5 h-3.5 text-red-400" />
-                    <span>Оставлено машин</span>
+                    <span>{t.worldSelector.machinesLeft}</span>
                   </div>
                   <div className="text-2xl font-bold font-mono-tabular text-white">
                     {current.stats.objectsCount}
                   </div>
-                  <div className="text-[10px] text-slate-400 font-mono mt-0.5">В каталоге архива</div>
+                  <div className="text-[10px] text-slate-400 font-mono mt-0.5">{t.worldSelector.inArchiveCatalog}</div>
                 </div>
 
                 <div className="bg-slate-950/70 border border-slate-800/80 rounded-lg p-4">
                   <div className="flex items-center gap-1.5 text-slate-400 text-[11px] font-mono uppercase mb-1">
                     <Radio className="w-3.5 h-3.5 text-blue-400" />
-                    <span>Всего миссий</span>
+                    <span>{t.worldSelector.allMissions}</span>
                   </div>
                   <div className="text-lg sm:text-xl font-bold font-mono-tabular text-white truncate">
-                    {current.stats.missionsCount}
+                    {localize(current.stats.missionsCount)}
                   </div>
                   <div className="text-[10px] text-slate-400 font-mono mt-0.5">{current.stats.timeSpan}</div>
                 </div>
@@ -152,30 +154,30 @@ export const WorldSelector: React.FC<WorldSelectorProps> = ({
                 <div className="bg-slate-950/70 border border-slate-800/80 rounded-lg p-4">
                   <div className="flex items-center gap-1.5 text-slate-400 text-[11px] font-mono uppercase mb-1">
                     <Orbit className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Дистанция</span>
+                    <span>{t.worldSelector.distanceLabel}</span>
                   </div>
                   <div className="text-sm sm:text-base font-bold font-mono-tabular text-white truncate">
-                    {current.stats.distanceFromEarth}
+                    {localize(current.stats.distanceFromEarth)}
                   </div>
-                  <div className="text-[10px] text-slate-400 font-mono mt-0.5">От Земли</div>
+                  <div className="text-[10px] text-slate-400 font-mono mt-0.5">{t.worldSelector.fromEarth}</div>
                 </div>
 
                 <div className="col-span-2 bg-slate-950/70 border border-slate-800/80 rounded-lg p-4">
                   <div className="text-slate-400 text-[11px] font-mono uppercase mb-1">
-                    Условия окружающей среды
+                    {t.worldSelector.envConditions}
                   </div>
                   <div className="text-xs sm:text-sm font-mono text-slate-200">
-                    {current.stats.environment}
+                    {localize(current.stats.environment)}
                   </div>
                 </div>
 
                 <div className="bg-slate-950/70 border border-slate-800/80 rounded-lg p-4">
                   <div className="flex items-center gap-1.5 text-slate-400 text-[11px] font-mono uppercase mb-1">
                     <Thermometer className="w-3.5 h-3.5 text-rose-400" />
-                    <span>Температура</span>
+                    <span>{t.worldSelector.temperatureLabel}</span>
                   </div>
                   <div className="text-xs font-mono font-semibold text-slate-200">
-                    {current.stats.surfaceTemp}
+                    {localize(current.stats.surfaceTemp)}
                   </div>
                 </div>
               </div>

@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { missionsData } from '../data/missionsData';
 import { Mission, Destination } from '../types/mission';
 import { MissionCard } from './MissionCard';
-import { Search, SlidersHorizontal, Rocket, RefreshCw } from 'lucide-react';
+import { Search, Rocket, RefreshCw } from 'lucide-react';
 import { spaceAudio } from '../utils/audio';
+import { useT } from '../i18n/LanguageContext';
 
 interface ObjectExplorerProps {
   onOpenDetail: (mission: Mission) => void;
@@ -17,6 +18,7 @@ export const ObjectExplorer: React.FC<ObjectExplorerProps> = ({
   activeWorld,
   onSelectWorld,
 }) => {
+  const { t, localize } = useT();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
 
@@ -25,30 +27,35 @@ export const ObjectExplorer: React.FC<ObjectExplorerProps> = ({
       // World check
       const matchesWorld = activeWorld ? mission.destination === activeWorld : true;
 
-      // Type check
+      // Type check by schematicType
       const matchesType =
         selectedType === 'all'
           ? true
           : selectedType === 'rover'
-          ? mission.type === 'Ровер' || mission.type === 'Лунный автомобиль'
+          ? mission.schematicType === 'rover' || mission.schematicType === 'rover-buggy'
           : selectedType === 'lander'
-          ? mission.type === 'Посадочный модуль' || mission.type === 'Сейсмическая станция'
+          ? mission.schematicType === 'lander' || mission.schematicType === 'station'
           : selectedType === 'helicopter'
-          ? mission.type === 'Атмосферный вертолет'
+          ? mission.schematicType === 'helicopter'
           : true;
 
       // Query check
       const q = searchQuery.toLowerCase().trim();
+      const name = localize(mission.name).toLowerCase();
+      const engName = mission.englishName.toLowerCase();
+      const loc = localize(mission.locationName).toLowerCase();
+      const desc = localize(mission.shortDescription).toLowerCase();
+
       const matchesQuery =
         !q ||
-        mission.name.toLowerCase().includes(q) ||
-        mission.englishName.toLowerCase().includes(q) ||
-        mission.locationName.toLowerCase().includes(q) ||
-        mission.shortDescription.toLowerCase().includes(q);
+        name.includes(q) ||
+        engName.includes(q) ||
+        loc.includes(q) ||
+        desc.includes(q);
 
       return matchesWorld && matchesType && matchesQuery;
     });
-  }, [activeWorld, selectedType, searchQuery]);
+  }, [activeWorld, selectedType, searchQuery, localize]);
 
   return (
     <section id="explorer" className="relative py-20 border-t border-slate-900 bg-[#05070b]">
@@ -58,13 +65,13 @@ export const ObjectExplorer: React.FC<ObjectExplorerProps> = ({
           <div>
             <div className="text-xs font-mono text-red-500 uppercase tracking-widest flex items-center gap-2 mb-2">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-              03 // РЕГИСТР АППАРАТОВ
+              {t.explorer.sectionTag}
             </div>
             <h2 className="font-display text-3xl sm:text-4xl font-bold text-white uppercase tracking-tight">
-              Каталог оставленных машин
+              {t.explorer.title}
             </h2>
             <p className="mt-2 text-sm text-slate-400 max-w-xl">
-              Нажмите на любую карточку, чтобы открыть полное досье с историей прибытия, открытиями, последним контактом и точными координатами.
+              {t.explorer.subtitle}
             </p>
           </div>
 
@@ -81,7 +88,7 @@ export const ObjectExplorer: React.FC<ObjectExplorerProps> = ({
                   : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
               }`}
             >
-              Марсианский сектор
+              {t.worldSelector.marsTitle}
             </button>
             <button
               onClick={() => {
@@ -94,7 +101,7 @@ export const ObjectExplorer: React.FC<ObjectExplorerProps> = ({
                   : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
               }`}
             >
-              Лунный сектор
+              {t.worldSelector.moonTitle}
             </button>
           </div>
         </div>
@@ -114,7 +121,7 @@ export const ObjectExplorer: React.FC<ObjectExplorerProps> = ({
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              Все типы
+              {t.explorer.filterAll}
             </button>
             <button
               onClick={() => {
@@ -127,7 +134,7 @@ export const ObjectExplorer: React.FC<ObjectExplorerProps> = ({
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              Роверы & Вездеходы
+              {t.explorer.filterRover}
             </button>
             <button
               onClick={() => {
@@ -140,7 +147,7 @@ export const ObjectExplorer: React.FC<ObjectExplorerProps> = ({
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              Посадочные платформы
+              {t.explorer.filterLander}
             </button>
             <button
               onClick={() => {
@@ -153,7 +160,7 @@ export const ObjectExplorer: React.FC<ObjectExplorerProps> = ({
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              Авиация (Ingenuity)
+              {t.explorer.filterHeli}
             </button>
           </div>
 
@@ -164,7 +171,7 @@ export const ObjectExplorer: React.FC<ObjectExplorerProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Поиск по имени, кратеру..."
+              placeholder={t.explorer.searchPlaceholder}
               className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs font-mono text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-red-500 transition-colors"
             />
             {searchQuery && (
@@ -181,13 +188,13 @@ export const ObjectExplorer: React.FC<ObjectExplorerProps> = ({
         {/* Counter readout */}
         <div className="mb-6 flex items-center justify-between text-xs font-mono text-slate-400">
           <div>
-            ОТОБРАНО ОБЪЕКТОВ:{' '}
+            {t.explorer.showingCount}{' '}
             <span className="text-white font-mono-tabular font-bold">
               {filteredMissions.length}
             </span>
           </div>
           <div className="text-[11px] text-slate-400">
-            Кликните на карточку для детализации
+            {t.map.clickToView}
           </div>
         </div>
 
@@ -196,10 +203,10 @@ export const ObjectExplorer: React.FC<ObjectExplorerProps> = ({
           <div className="text-center py-16 border border-dashed border-slate-800 rounded-xl bg-slate-950/40">
             <Rocket className="w-10 h-10 text-slate-600 mx-auto mb-3" />
             <div className="text-base font-medium text-slate-300">
-              По данному запросу аппаратов не найдено
+              {t.explorer.noResultsTitle}
             </div>
             <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-              Попробуйте сбросить поисковый запрос или переключить сектор планеты.
+              {t.explorer.noResultsDesc}
             </p>
             <button
               onClick={() => {
@@ -209,7 +216,7 @@ export const ObjectExplorer: React.FC<ObjectExplorerProps> = ({
               className="mt-4 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-mono text-white rounded transition-colors inline-flex items-center gap-2"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              Сбросить фильтры
+              {t.explorer.resetFilters}
             </button>
           </div>
         ) : (

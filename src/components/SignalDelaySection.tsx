@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Radio, Send, Play, RotateCcw, Clock, Satellite, Zap, ArrowRight, CheckCircle2, AlertCircle, Info, ExternalLink } from 'lucide-react';
+import { Radio, Send, RotateCcw, Clock, Satellite, Zap, Info } from 'lucide-react';
 import { spaceAudio } from '../utils/audio';
+import { useT } from '../i18n/LanguageContext';
+import { LocalizedText } from '../i18n/types';
 
 // Speed of light constant: c = 299,792 km/s
 const SPEED_OF_LIGHT_KM_S = 299792;
 
 interface CommandPreset {
   id: string;
-  label: string;
+  label: LocalizedText;
   code: string;
   response: string;
 }
@@ -16,25 +17,38 @@ interface CommandPreset {
 const commandPresets: CommandPreset[] = [
   {
     id: 'ping',
-    label: 'Запрос статуса систем (PING)',
+    label: {
+      ru: 'Запрос статуса систем (PING)',
+      en: 'System Health Query (PING)',
+      uz: 'Tizimlar holati so‘rovi (PING)',
+    },
     code: 'DSN-CMD 0x1A: QUERY // PBIT STATUS & VOLTAGE BUS',
     response: 'ACK: ALL SYSTEMS NOMINAL // BATTERY 94% // THERMAL STABLE'
   },
   {
     id: 'drive',
-    label: 'Движение вперед на 5 метров',
+    label: {
+      ru: 'Движение вперед на 5 метров',
+      en: 'Drive 5 meters forward',
+      uz: '5 metr oldinga harakatlanish',
+    },
     code: 'DSN-CMD 0x4F: NAVCAM AUTODRIVE // 5.0m AT HEADING 042°',
     response: 'ROVER TELEMETRY: 5.02m TRAVERSED // HAZCAM CLEAR // STOPPING'
   },
   {
     id: 'photo',
-    label: 'Съемка панорамы высокого разрешения',
+    label: {
+      ru: 'Съемка панорамы высокого разрешения',
+      en: 'High-resolution panorama capture',
+      uz: 'Yuqori aniqlikdagi panorama suratga olish',
+    },
     code: 'DSN-CMD 0x82: MASTCAM-Z 360° PANO // FILTER RGB 4K',
     response: 'DOWNLINK READY: 28 RAW FRAMES IN COMPRESSION BUFFER'
   }
 ];
 
 export const SignalDelaySection: React.FC = () => {
+  const { t, localize } = useT();
   // Distance in millions of kilometers (55 to 400 млн км)
   const [distanceMlnKm, setDistanceMlnKm] = useState<number>(225);
   const [selectedCommand, setSelectedCommand] = useState<CommandPreset>(commandPresets[0]);
@@ -68,7 +82,7 @@ export const SignalDelaySection: React.FC = () => {
   const formatTime = (totalSec: number) => {
     const mins = Math.floor(totalSec / 60);
     const secs = (totalSec % 60).toFixed(1);
-    return `${mins} мин ${secs} сек`;
+    return `${mins} ${t.signalDelay.minutes} ${secs} ${t.signalDelay.seconds}`;
   };
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,10 +109,6 @@ export const SignalDelaySection: React.FC = () => {
       return;
     }
 
-    // Accelerated demonstration: total cycle ~4.8 seconds
-    // 0 - 45%: Earth to Mars
-    // 45 - 55%: Mars onboard processing
-    // 55 - 100%: Mars return downlink to Earth
     setTransmissionPhase('earth_to_mars');
     const startTime = performance.now();
     const totalSimDuration = 4800; // ms
@@ -163,15 +173,15 @@ export const SignalDelaySection: React.FC = () => {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 text-xs font-mono text-cyan-400 uppercase tracking-widest mb-3">
             <Radio className="w-3.5 h-3.5 animate-pulse text-cyan-400" />
-            <span>ГЛУБОКИЙ КОСМОС // DEEP SPACE NETWORK (DSN)</span>
+            <span>{t.signalDelay.sectionTag}</span>
           </div>
 
           <h2 className="font-display text-3xl sm:text-5xl font-black text-white uppercase tracking-tight">
-            ЗАДЕРЖКА СИГНАЛА ДО МАРСА
+            {t.signalDelay.title}
           </h2>
 
           <p className="mt-3 text-sm sm:text-base text-slate-300 font-light leading-relaxed">
-            Радиоволны распространяются с фундаментальным пределом — скоростью света (299 792 км/с). Управлять марсоходом джойстиком в реальном времени невозможно: между нажатием кнопки и реакцией проходят десятки минут.
+            {t.signalDelay.subtitle}
           </p>
         </div>
 
@@ -182,19 +192,19 @@ export const SignalDelaySection: React.FC = () => {
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <span className="text-xs font-mono text-slate-400 uppercase tracking-wider flex items-center gap-2">
                 <Satellite className="w-4 h-4 text-cyan-400" />
-                Расстояние Земля — Марс
+                {t.signalDelay.distanceLabel}
               </span>
               <span className="font-mono text-lg font-bold text-cyan-300 font-mono-tabular">
-                {distanceMlnKm} млн км
+                {distanceMlnKm} mln km
               </span>
             </div>
 
             {/* Slider */}
             <div>
               <div className="flex justify-between text-xs font-mono text-slate-500 mb-2">
-                <span>55 млн км (Мин.)</span>
-                <span className="text-slate-400">Текущее: {distanceMlnKm} 000 000 км</span>
-                <span>400 млн км (Макс.)</span>
+                <span>{t.signalDelay.minDistance}</span>
+                <span className="text-slate-400">{t.signalDelay.currentDistance} {distanceMlnKm} 000 000 km</span>
+                <span>{t.signalDelay.maxDistance}</span>
               </div>
               <input
                 type="range"
@@ -219,7 +229,7 @@ export const SignalDelaySection: React.FC = () => {
                     : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
                 }`}
               >
-                Великое противостояние (55 млн км)
+                {t.signalDelay.presetOpposition}
               </button>
               <button
                 onClick={() => handleSetPresetDistance(225)}
@@ -230,7 +240,7 @@ export const SignalDelaySection: React.FC = () => {
                     : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
                 }`}
               >
-                Средняя орбита (225 млн км)
+                {t.signalDelay.presetAverage}
               </button>
               <button
                 onClick={() => handleSetPresetDistance(400)}
@@ -241,7 +251,7 @@ export const SignalDelaySection: React.FC = () => {
                     : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
                 }`}
               >
-                Солнечное соединение (400 млн км)
+                {t.signalDelay.presetConjunction}
               </button>
             </div>
 
@@ -250,34 +260,34 @@ export const SignalDelaySection: React.FC = () => {
               <div className="p-4 rounded-xl bg-slate-950 border border-slate-800/90">
                 <div className="text-[11px] font-mono uppercase text-slate-500 flex items-center gap-1.5 mb-1">
                   <Clock className="w-3.5 h-3.5 text-cyan-400" />
-                  Задержка в одну сторону (One-Way)
+                  {t.signalDelay.oneWayLabel}
                 </div>
                 <div className="text-xl sm:text-2xl font-bold font-mono text-white font-mono-tabular">
                   {formatTime(oneWaySeconds)}
                 </div>
                 <div className="text-[11px] font-mono text-slate-500 mt-1">
-                  {oneWaySeconds.toFixed(1)} сек при c = 299 792 км/с
+                  {oneWaySeconds.toFixed(1)} {t.signalDelay.seconds} (c = 299 792 km/s)
                 </div>
               </div>
 
               <div className="p-4 rounded-xl bg-slate-950 border border-slate-800/90">
                 <div className="text-[11px] font-mono uppercase text-slate-500 flex items-center gap-1.5 mb-1">
                   <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
-                  Полный цикл «туда и обратно» (Round-Trip)
+                  {t.signalDelay.roundTripLabel}
                 </div>
                 <div className="text-xl sm:text-2xl font-bold font-mono text-amber-300 font-mono-tabular">
                   {formatTime(roundTripSeconds)}
                 </div>
                 <div className="text-[11px] font-mono text-slate-500 mt-1">
-                  {roundTripSeconds.toFixed(1)} сек до получения ответа
+                  {roundTripSeconds.toFixed(1)} {t.signalDelay.seconds} ({t.signalDelay.roundTripSub})
                 </div>
               </div>
             </div>
 
             {/* Formula Reference Tag */}
             <div className="p-3 bg-slate-950/80 border border-slate-800/60 rounded-lg text-xs font-mono text-slate-400 flex items-center justify-between">
-              <span>ФОРМУЛА: t = S / c</span>
-              <span className="text-slate-500">{distanceMlnKm} 000 000 км / 299 792 км/с = {oneWaySeconds.toFixed(1)} с</span>
+              <span>{t.signalDelay.formulaTag}</span>
+              <span className="text-slate-500">{distanceMlnKm} 000 000 km / 299 792 km/s = {oneWaySeconds.toFixed(1)} s</span>
             </div>
           </div>
 
@@ -287,7 +297,7 @@ export const SignalDelaySection: React.FC = () => {
               <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
                 <span className="text-xs font-mono uppercase tracking-wider text-slate-400 flex items-center gap-2">
                   <Zap className="w-3.5 h-3.5 text-amber-400" />
-                  Пакет команды для отправки
+                  {t.signalDelay.commandPacketLabel}
                 </span>
                 <span className="text-[10px] font-mono text-slate-500">X-BAND 8.4 GHz</span>
               </div>
@@ -308,7 +318,7 @@ export const SignalDelaySection: React.FC = () => {
                         : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
                     }`}
                   >
-                    <div className="font-semibold text-slate-200">{cmd.label}</div>
+                    <div className="font-semibold text-slate-200">{localize(cmd.label)}</div>
                     <div className="text-[10px] text-slate-500 truncate mt-0.5">{cmd.code}</div>
                   </button>
                 ))}
@@ -317,7 +327,7 @@ export const SignalDelaySection: React.FC = () => {
               {/* Status Indicator */}
               <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500">СТАТУС КАНАЛА:</span>
+                  <span className="text-slate-500">{t.signalDelay.channelStatusLabel}</span>
                   <span className={`font-semibold uppercase ${
                     transmissionPhase === 'completed'
                       ? 'text-emerald-400'
@@ -325,17 +335,17 @@ export const SignalDelaySection: React.FC = () => {
                       ? 'text-cyan-400 animate-pulse'
                       : 'text-slate-400'
                   }`}>
-                    {transmissionPhase === 'idle' && 'ГОТОВ К ПЕРЕДАЧЕ'}
-                    {transmissionPhase === 'earth_to_mars' && 'СИГНАЛ В ПУТИ К МАРСУ...'}
-                    {transmissionPhase === 'mars_processing' && 'МАРС: ВЫПОЛНЕНИЕ КОМАНДЫ...'}
-                    {transmissionPhase === 'mars_to_earth' && 'ОТВЕТ ЛЕТИТ К ЗЕМЛЕ...'}
-                    {transmissionPhase === 'completed' && 'ТЕЛЕМЕТРИЯ ПОЛУЧЕНА'}
+                    {transmissionPhase === 'idle' && t.signalDelay.statusIdle}
+                    {transmissionPhase === 'earth_to_mars' && t.signalDelay.statusEarthToMars}
+                    {transmissionPhase === 'mars_processing' && t.signalDelay.statusMarsProcessing}
+                    {transmissionPhase === 'mars_to_earth' && t.signalDelay.statusMarsToEarth}
+                    {transmissionPhase === 'completed' && t.signalDelay.statusCompleted}
                   </span>
                 </div>
 
                 {transmissionPhase === 'completed' && (
                   <div className="pt-2 border-t border-slate-900 text-emerald-300/90 text-[11px] leading-relaxed">
-                    <div className="font-bold text-emerald-400 mb-0.5">ОТВЕТ РОСТЕХНИКИ:</div>
+                    <div className="font-bold text-emerald-400 mb-0.5">{t.signalDelay.responseLabel}</div>
                     {selectedCommand.response}
                   </div>
                 )}
@@ -354,14 +364,14 @@ export const SignalDelaySection: React.FC = () => {
                 }`}
               >
                 <Send className="w-4 h-4" />
-                <span>ОТПРАВИТЬ КОМАНДУ</span>
+                <span>{t.signalDelay.sendBtn}</span>
               </button>
 
               {(transmissionPhase !== 'idle' || isTransmitting) && (
                 <button
                   onClick={handleResetSimulation}
                   className="px-3 py-3 rounded-lg border border-slate-800 hover:bg-slate-900 text-slate-400 hover:text-white transition-colors"
-                  title="Сбросить"
+                  title={t.signalDelay.resetBtn}
                 >
                   <RotateCcw className="w-4 h-4" />
                 </button>
@@ -373,9 +383,9 @@ export const SignalDelaySection: React.FC = () => {
         {/* Animated Planetary Beam Stage */}
         <div className="rounded-2xl border border-slate-800 bg-[#04060a] p-6 sm:p-10 shadow-2xl relative overflow-hidden">
           <div className="flex items-center justify-between text-xs font-mono text-slate-500 border-b border-slate-900 pb-3 mb-8">
-            <span>ВИЗУАЛИЗАЦИЯ РАДИОЛУЧА DSN</span>
+            <span>{t.signalDelay.vizTitle}</span>
             <span className="text-cyan-400 font-mono-tabular">
-              {isTransmitting ? `СИМУЛЯЦИЯ: ${Math.round(simulationProgress * 100)}%` : 'РЕЖИМ ОЖИДАНИЯ'}
+              {isTransmitting ? `${t.signalDelay.modeSim}: ${Math.round(simulationProgress * 100)}%` : t.signalDelay.modeIdle}
             </span>
           </div>
 
@@ -411,14 +421,14 @@ export const SignalDelaySection: React.FC = () => {
               }`}>
                 <span className="text-xl sm:text-2xl">🌍</span>
               </div>
-              <span className="mt-2 text-xs font-mono font-bold text-white uppercase">ЗЕМЛЯ</span>
-              <span className="text-[10px] font-mono text-slate-500">Goldstone DSN</span>
+              <span className="mt-2 text-xs font-mono font-bold text-white uppercase">{t.signalDelay.earthNode}</span>
+              <span className="text-[10px] font-mono text-slate-500">{t.signalDelay.earthSub}</span>
             </div>
 
             {/* Space Void / Distance Marker */}
             <div className="text-center font-mono text-xs text-slate-500 hidden sm:block">
-              <div className="text-slate-400 font-bold">{distanceMlnKm} млн км вакуума</div>
-              <div className="text-[10px] text-slate-600">скорость света c</div>
+              <div className="text-slate-400 font-bold">{distanceMlnKm} mln km {t.signalDelay.spaceVacuum}</div>
+              <div className="text-[10px] text-slate-600">{t.signalDelay.lightSpeedConstant}</div>
             </div>
 
             {/* Mars Station Node */}
@@ -430,8 +440,8 @@ export const SignalDelaySection: React.FC = () => {
               }`}>
                 <span className="text-xl sm:text-2xl">🔴</span>
               </div>
-              <span className="mt-2 text-xs font-mono font-bold text-amber-400 uppercase">МАРС</span>
-              <span className="text-[10px] font-mono text-slate-500">Кратер Индевор / Езеро</span>
+              <span className="mt-2 text-xs font-mono font-bold text-amber-400 uppercase">{t.signalDelay.marsNode}</span>
+              <span className="text-[10px] font-mono text-slate-500">{t.signalDelay.marsSub}</span>
             </div>
           </div>
 
@@ -439,7 +449,7 @@ export const SignalDelaySection: React.FC = () => {
           <div className="mt-6 pt-4 border-t border-slate-900/80 flex items-start gap-3 text-xs text-slate-400">
             <Info className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
             <p className="leading-relaxed">
-              <strong className="text-slate-200">Почему марсоходы не управляются «вручную»:</strong> При задержке в 15 минут команда на остановку перед пропастью придет только через четверть часа после того, как аппарат уже упал. Поэтому Spirit, Opportunity, Curiosity и Perseverance оснащены бортовыми алгоритмами AutoNav (автономной навигации) с картографированием препятствий на стереокамерах Hazcam без участия Земли.
+              <strong className="text-slate-200">{t.signalDelay.autonavTitle}:</strong> {t.signalDelay.autonavDesc}
             </p>
           </div>
         </div>

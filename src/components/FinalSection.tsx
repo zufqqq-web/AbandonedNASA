@@ -1,9 +1,12 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { ArrowUp, Sparkles, Rocket } from 'lucide-react';
+import { ArrowUp, Sparkles } from 'lucide-react';
 import { spaceAudio } from '../utils/audio';
+import { useT } from '../i18n/LanguageContext';
 
 export const FinalSection: React.FC = () => {
+  const { t } = useT();
+
   const scrollToTop = () => {
     spaceAudio.playTelemetryBeep(1500, 0.05);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -24,7 +27,7 @@ export const FinalSection: React.FC = () => {
           className="inline-flex items-center gap-2 text-xs font-mono text-slate-400 uppercase tracking-widest mb-6"
         >
           <Sparkles className="w-3.5 h-3.5 text-red-500" />
-          <span>ЭПИЛОГ // NASA SPACE APPS CHALLENGE</span>
+          <span>{t.final.badge}</span>
         </motion.div>
 
         <motion.h2
@@ -35,9 +38,9 @@ export const FinalSection: React.FC = () => {
           className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white uppercase tracking-tight leading-[1.08]"
           style={{ textWrap: 'balance' }}
         >
-          МИССИЯ ЗАВЕРШЕНА.<br />
+          {t.final.heroTitle1}<br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-rose-400 to-amber-200">
-            ИСТОРИЯ — НЕТ.
+            {t.final.heroTitle2}
           </span>
         </motion.h2>
 
@@ -49,7 +52,7 @@ export const FinalSection: React.FC = () => {
           className="mt-6 text-base sm:text-xl text-slate-300 font-light leading-relaxed max-w-2xl mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          Мы отправляем машины в другие миры, чтобы познать неизвестное. Иногда они остаются там навсегда. Но их открытия, мужество инженеров и научные сокровища навсегда принадлежат всему человечеству.
+          {t.final.heroParagraph}
         </motion.p>
 
         <motion.div
@@ -63,7 +66,7 @@ export const FinalSection: React.FC = () => {
             onClick={scrollToTop}
             className="group px-8 py-4 bg-slate-900 hover:bg-slate-800 text-white border border-slate-700 font-mono text-xs uppercase tracking-widest font-semibold rounded-md transition-all shadow-xl inline-flex items-center gap-2 hover:gap-3 hover:border-red-500"
           >
-            <span>ИССЛЕДОВАТЬ ЕЩЁ РАЗ</span>
+            <span>{t.final.exploreAgainBtn}</span>
             <ArrowUp className="w-4 h-4 text-red-400 transition-transform group-hover:-translate-y-1" />
           </button>
         </motion.div>

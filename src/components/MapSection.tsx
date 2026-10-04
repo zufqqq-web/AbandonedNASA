@@ -3,7 +3,8 @@ import L from 'leaflet';
 import { missionsData } from '../data/missionsData';
 import { Mission, Destination } from '../types/mission';
 import { spaceAudio } from '../utils/audio';
-import { MapPin, Globe, Compass, ExternalLink, Layers, Navigation } from 'lucide-react';
+import { useT } from '../i18n/LanguageContext';
+import { MapPin, Globe, Compass, Layers, Navigation } from 'lucide-react';
 
 interface MapSectionProps {
   activeWorld: Destination;
@@ -16,6 +17,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
   onSelectWorld,
   onSelectMission,
 }) => {
+  const { t, localize, language } = useT();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
@@ -115,28 +117,35 @@ export const MapSection: React.FC<MapSectionProps> = ({
 
       const marker = L.marker([lat, lon], { icon: customIcon });
 
+      // Localized strings for popup
+      const missionTypeName = localize(mission.type);
+      const missionName = localize(mission.name);
+      const locName = localize(mission.locationName);
+      const worldName = isMars ? t.worldSelector.marsTitle : t.worldSelector.moonTitle;
+      const dossierBtnText = t.map.fullDossierBtn;
+
       // Popup Content with Clean Dark Aerospace Typography & High Contrast
       const popupHtml = `
         <div style="background-color: #090d16; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-width: 220px; padding: 2px;">
           <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
             <span style="font-size: 10px; font-family: monospace; font-weight: 700; text-transform: uppercase; color: ${isMars ? '#f87171' : '#38bdf8'}; letter-spacing: 0.05em;">
-              ${mission.type} · ${isMars ? 'МАРС' : 'ЛУНА'}
+              ${missionTypeName} · ${worldName}
             </span>
             <span style="font-size: 10px; font-family: monospace; color: #cbd5e1; background: #1e293b; padding: 1px 6px; border-radius: 4px; font-weight: 600;">
               ${mission.activeSpan.split('—')[0].trim()}
             </span>
           </div>
           <div style="font-size: 15px; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: -0.01em; margin-bottom: 4px; line-height: 1.2;">
-            ${mission.name}
+            ${missionName}
           </div>
           <div style="font-size: 12px; font-weight: 500; color: #e2e8f0; margin-bottom: 6px;">
-            ${mission.locationName}
+            ${locName}
           </div>
           <div style="font-size: 10px; font-family: monospace; color: #cbd5e1; background: #0f172a; padding: 4px 6px; border-radius: 4px; border: 1px solid #1e293b; margin-bottom: 10px;">
             📍 ${mission.coordinates.formatted}
           </div>
           <button id="popup-btn-${mission.id}" style="width: 100%; padding: 8px 12px; background-color: #e11d48; color: #ffffff; border: none; border-radius: 6px; font-size: 11px; font-family: monospace; text-transform: uppercase; cursor: pointer; font-weight: 700; letter-spacing: 0.05em; transition: background 0.2s;">
-            ОТКРЫТЬ ДОСЬЕ МИССИИ →
+            ${dossierBtnText}
           </button>
         </div>
       `;
@@ -168,7 +177,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
         mapInstanceRef.current = null;
       }
     };
-  }, [activeWorld]);
+  }, [activeWorld, language]);
 
   const handleFocusMission = (m: Mission) => {
     if (!mapInstanceRef.current || m.coordinates.latNum === undefined || m.coordinates.lonNum === undefined) return;
@@ -187,88 +196,71 @@ export const MapSection: React.FC<MapSectionProps> = ({
           <div>
             <div className="text-xs font-mono text-red-500 uppercase tracking-widest flex items-center gap-2 mb-2">
               <Compass className="w-3.5 h-3.5" />
-              КАРТОГРАФИЧЕСКИЙ СЕРВЕР // NASA TREK WMTS
+              {t.map.sectionTag}
             </div>
             <h2 className="font-display text-3xl sm:text-4xl font-bold text-white uppercase tracking-tight">
-              Интерактивная карта посадок
+              {t.map.title}
             </h2>
             <p className="mt-2 text-sm text-slate-400 max-w-xl">
-              Точные координаты и спутниковые мозаики NASA Moon Trek и Mars Trek. Кликайте на точки посадок для открытия досье.
+              {t.map.subtitle}
             </p>
           </div>
 
           {/* Quick World Toggle */}
-          <div className="inline-flex p-1 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono self-start md:self-auto">
+          <div className="flex items-center gap-2 bg-slate-900 p-1 rounded-lg border border-slate-800 self-start md:self-auto">
             <button
-              onClick={() => {
-                onSelectWorld('Mars');
-                spaceAudio.playTelemetryBeep(1300, 0.04);
-              }}
-              className={`px-4 py-2 rounded flex items-center gap-2 transition-all ${
+              onClick={() => onSelectWorld('Mars')}
+              className={`px-3 py-1.5 rounded font-mono text-xs uppercase tracking-wider transition-colors ${
                 activeWorld === 'Mars'
-                  ? 'bg-red-600 text-white font-bold shadow-md'
+                  ? 'bg-red-600 text-white font-bold'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              <div className="w-2 h-2 rounded-full bg-red-400" />
-              <span>Карта Марса (MGS MOLA)</span>
+              {t.map.filterMars}
             </button>
-
             <button
-              onClick={() => {
-                onSelectWorld('Moon');
-                spaceAudio.playTelemetryBeep(1100, 0.04);
-              }}
-              className={`px-4 py-2 rounded flex items-center gap-2 transition-all ${
+              onClick={() => onSelectWorld('Moon')}
+              className={`px-3 py-1.5 rounded font-mono text-xs uppercase tracking-wider transition-colors ${
                 activeWorld === 'Moon'
-                  ? 'bg-slate-200 text-slate-950 font-bold shadow-md'
+                  ? 'bg-slate-200 text-slate-900 font-bold'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              <div className="w-2 h-2 rounded-full bg-slate-400" />
-              <span>Карта Луны (LRO WAC)</span>
+              {t.map.filterMoon}
             </button>
           </div>
         </div>
 
-        {/* Map Layout Container */}
+        {/* Map Viewport Container */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Main Leaflet Map Viewport */}
-          <div className="lg:col-span-9 relative rounded-2xl border border-slate-800 overflow-hidden bg-slate-950 shadow-2xl">
-            {/* Top Telemetry HUD Overlay */}
-            <div className="absolute top-3 left-3 z-10 bg-black/90 backdrop-blur-md border border-slate-800 px-3 py-1.5 rounded-lg text-[11px] font-mono text-slate-200 flex items-center gap-2 shadow-lg pointer-events-none">
-              <Navigation className="w-3.5 h-3.5 text-red-500" />
-              <span>СЕКТОР: {activeWorld === 'Mars' ? 'MARS TREK (463m/px)' : 'MOON TREK LRO (303ppd)'}</span>
+          {/* Main Leaflet Canvas */}
+          <div className="lg:col-span-8 relative rounded-xl border border-slate-800 overflow-hidden bg-slate-950 shadow-2xl">
+            {/* Top Toolbar Overlay */}
+            <div className="absolute top-3 left-3 z-[400] flex items-center gap-2 bg-slate-950/85 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-mono text-slate-300">
+              <Layers className="w-3.5 h-3.5 text-red-400" />
+              <span>
+                {activeWorld === 'Mars' ? 'Mars Trek (MOLA)' : 'Moon Trek (LRO WAC)'}
+              </span>
             </div>
 
-            <div className="absolute top-3 right-3 z-10 hidden sm:flex items-center gap-2 bg-black/90 backdrop-blur-md border border-slate-800 px-3 py-1.5 rounded-lg text-[10px] font-mono text-slate-300 shadow-lg pointer-events-none">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>ПОСАДОК НА КАРТЕ: {worldMissions.length}</span>
+            {/* Coordinates / Compass HUD overlay */}
+            <div className="absolute bottom-3 left-3 z-[400] hidden sm:flex items-center gap-2 bg-slate-950/85 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-800 text-[11px] font-mono text-slate-400">
+              <Navigation className="w-3 h-3 text-red-400" />
+              <span>{t.map.clickToView}</span>
             </div>
 
-            {/* The Actual Leaflet Map Canvas */}
+            {/* Actual Map Container */}
             <div
               ref={mapContainerRef}
-              className="w-full h-[520px] sm:h-[600px] z-0"
-              style={{ background: '#070a0f' }}
+              className="w-full h-[460px] sm:h-[560px] z-0 cursor-grab active:cursor-grabbing"
             />
-
-            {/* Bottom Layer Attribution Line */}
-            <div className="p-3 bg-slate-950/90 border-t border-slate-900 text-[10px] font-mono text-slate-500 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-              <div>
-                Тайловый слой: <span className="text-slate-400">{tileConfigs[activeWorld].attribution}</span>
-              </div>
-              <div className="text-slate-600">
-                Проекция: Equirectangular (EQ) / Leaflet 1.9
-              </div>
-            </div>
           </div>
 
-          {/* Side List of Landing Sites */}
-          <div className="lg:col-span-3 space-y-2 max-h-[640px] overflow-y-auto pr-1">
-            <div className="text-xs font-mono text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+          {/* Right Sidebar: Quick Location Focus Cards */}
+          <div className="lg:col-span-4 space-y-2.5 max-h-[560px] overflow-y-auto pr-1">
+            <div className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-2 px-1">
               <MapPin className="w-3.5 h-3.5 text-red-500" />
-              <span>Объекты в секторе ({worldMissions.length})</span>
+              <span>{t.map.sectorObjectsCount} ({worldMissions.length})</span>
             </div>
 
             {worldMissions.map((m) => {
@@ -284,16 +276,16 @@ export const MapSection: React.FC<MapSectionProps> = ({
                   }`}
                 >
                   <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 mb-1">
-                    <span className="truncate">{m.type}</span>
+                    <span className="truncate">{localize(m.type)}</span>
                     <span className="text-slate-500 font-mono-tabular">{m.activeSpan.split('—')[0]}</span>
                   </div>
 
                   <div className="text-sm font-display font-bold text-white uppercase group-hover:text-red-400 transition-colors">
-                    {m.name}
+                    {localize(m.name)}
                   </div>
 
                   <div className="text-xs text-slate-400 mt-1 truncate">
-                    {m.locationName}
+                    {localize(m.locationName)}
                   </div>
 
                   <div className="mt-2 pt-2 border-t border-slate-900 flex items-center justify-between text-[10px] font-mono">
@@ -306,7 +298,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
                       }}
                       className="text-red-400 hover:text-red-300 font-semibold"
                     >
-                      Досье →
+                      {t.map.openDossierBtn}
                     </button>
                   </div>
                 </div>
